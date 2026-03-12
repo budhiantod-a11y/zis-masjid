@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ZIS Masjid Al-Muthmainnah 1447 H</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --green-dark: #1a3a2a;
+    --green-mid: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #d8f3dc;
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --cream: #faf7f0;
+    --text: #1a1a1a;
+    --text-soft: #5a5a5a;
+    --border: #d4c9a8;
+    --white: #ffffff;
+    --shadow: 0 4px 24px rgba(26,58,42,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+  .app-header { background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%); padding: 20px 16px 28px; text-align: center; position: relative; overflow: hidden; }
+  .app-header::before { content:''; position:absolute; top:-40px; right:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.04); }
+  .app-header .arabic { font-family:'Amiri',serif; font-size:22px; color:var(--gold-light); margin-bottom:6px; }
+  .app-header h1 { font-size:13px; font-weight:700; color:white; letter-spacing:0.5px; line-height:1.5; text-transform:uppercase; }
+  .app-header .sub { font-size:11px; color:rgba(255,255,255,0.65); margin-top:4px; }
+  .gold-line { width:60px; height:2px; background:var(--gold); margin:10px auto 8px; border-radius:2px; }
+
+  .tabs { display:flex; background:var(--white); border-bottom:2px solid var(--green-pale); position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .tab { flex:1; padding:12px 4px; text-align:center; font-size:11px; font-weight:600; color:var(--text-soft); cursor:pointer; border-bottom:3px solid transparent; transition:all 0.2s; }
+  .tab.active { color:var(--green-mid); border-bottom-color:var(--green-mid); }
+  .tab-icon { font-size:15px; display:block; margin-bottom:2px; }
+
+  .content { padding:16px; max-width:480px; margin:0 auto; }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  .card { background:var(--white); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:var(--shadow); border:1px solid rgba(212,201,168,0.3); }
+  .card-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--green-mid); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+  .card-title::before { content:''; width:3px; height:14px; background:var(--gold); border-radius:2px; }
+
+  .form-row { margin-bottom:12px; }
+  .form-row label { display:block; font-size:11px; font-weight:600; color:var(--text-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+  .form-row input { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif; background:var(--cream); color:var(--text); transition:border-color 0.2s; -webkit-appearance:none; }
+  .form-row input:focus { outline:none; border-color:var(--green-light); background:white; }
+  .form-row input[readonly] { background:#f0f0f0; color:var(--text-soft); }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  .zakat-item { display:grid; grid-template-columns:1fr 80px 110px; gap:8px; align-items:center; margin-bottom:8px; }
+  .zakat-label { font-size:13px; font-weight:500; }
+  .zakat-sub { font-size:11px; color:var(--text-soft); }
+  .zakat-item input { padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; background:var(--cream); text-align:right; width:100%; }
+  .zakat-item input:focus { outline:none; border-color:var(--green-light); background:white; }
+  .divider { height:1px; background:var(--green-pale); margin:8px 0; }
+
+  .total-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; }
+  .total-label { font-size:13px; font-weight:600; color:var(--green-dark); }
+  .total-value { font-size:14px; font-weight:700; color:var(--green-mid); }
+
+  .btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:14px; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.2s; letter-spacing:0.5px; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:8px; }
+  .btn:active { transform:scale(0.98); }
+  .btn-primary { background:linear-gradient(135deg,var(--green-mid),var(--green-dark)); color:white; box-shadow:0 4px 16px rgba(45,106,79,0.3); }
+  .btn-gold { background:linear-gradient(135deg,var(--gold),#a07830); color:white; box-shadow:0 4px 16px rgba(201,168,76,0.3); }
+  .btn-wa { background:linear-gradient(135deg,#25D366,#128C7E); color:white; box-shadow:0 4px 16px rgba(37,211,102,0.3); }
+  .btn-excel { background:linear-gradient(135deg,#1d6f42,#0d4a2c); color:white; box-shadow:0 4px 16px rgba(29,111,66,0.3); }
+  .btn-sm { padding:10px 14px; font-size:12px; border-radius:10px; }
+
+  #receipt-preview { display:none; background:white; border-radius:16px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:16px; }
+  .receipt-header { background:linear-gradient(135deg,var(--green-dark),var(--green-mid)); padding:16px; text-align:center; color:white; }
+  .receipt-header .r-arabic { font-family:'Amiri',serif; font-size:18px; color:var(--gold-light); margin-bottom:4px; }
+  .receipt-header h2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; }
+  .receipt-header .r-sub { font-size:10px; opacity:0.7; margin-top:2px; }
+  .receipt-body { padding:16px; }
+  .r-info-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; border-bottom:1px dashed var(--border); }
+  .r-info-row:last-child { border-bottom:none; }
+  .r-info-label { color:var(--text-soft); font-weight:500; }
+  .r-info-value { font-weight:600; text-align:right; }
+  .r-table { width:100%; border-collapse:collapse; margin:12px 0; font-size:12px; }
+  .r-table th { background:var(--green-pale); padding:6px 8px; text-align:left; font-weight:700; color:var(--green-dark); font-size:11px; }
+  .r-table td { padding:5px 8px; border-bottom:1px solid #f0f0f0; }
+  .r-total { background:var(--green-pale); border-radius:8px; padding:10px 12px; margin-top:8px; }
+  .r-total-row { display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:var(--green-dark); padding:2px 0; }
+  .r-footer { margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:11px; }
+  .r-sign-label { color:var(--text-soft); margin-bottom:30px; }
+  .r-sign-name { font-weight:700; font-size:12px; }
+  .r-sign-detail { color:var(--text-soft); font-size:10px; }
+
+  .wa-preview { background:#e9f5e1; border-radius:12px; padding:14px; margin-bottom:12px; border:1px solid #b7dfb0; font-size:13px; line-height:1.7; color:#1a1a1a; white-space:pre-wrap; word-break:break-word; }
+  .wa-preview-label { font-size:11px; font-weight:700; color:#128C7E; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+
+  /* HISTORY */
+  .history-item { background:white; border-radius:12px; padding:14px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid var(--green-light); display:flex; justify-content:space-between; align-items:center; }
+  .history-no { font-size:11px; color:var(--text-soft); }
+  .history-name { font-size:14px; font-weight:700; margin:2px 0; }
+  .history-date { font-size:11px; color:var(--text-soft); }
+  .history-amount { font-size:15px; font-weight:700; color:var(--green-mid); text-align:right; }
+  .history-beras { font-size:11px; color:var(--text-soft); text-align:right; }
+
+  /* SUMMARY CARD */
+  .summary-card { background:linear-gradient(135deg,var(--green-dark),var(--green-mid)); border-radius:16px; padding:16px; margin-bottom:16px; color:white; }
+  .summary-title { font-size:11px; font-weight:600; opacity:0.7; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; }
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .summary-item { background:rgba(255,255,255,0.1); border-radius:10px; padding:10px; }
+  .summary-label { font-size:10px; opacity:0.7; margin-bottom:2px; }
+  .summary-value { font-size:16px; font-weight:700; }
+  .summary-sub { font-size:10px; opacity:0.7; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--text-soft); }
+  .empty-state .emoji { font-size:40px; margin-bottom:12px; }
+
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--green-dark); color:white; padding:12px 20px; border-radius:24px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); transition:transform 0.3s ease; z-index:999; white-space:nowrap; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .badge { display:inline-block; background:var(--gold); color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; margin-left:4px; }
+
+  .info-box { background:#fff8e1; border:1px solid var(--gold); border-radius:10px; padding:12px; margin-bottom:12px; font-size:12px; color:#7a6000; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="arabic">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+  <div class="gold-line"></div>
+  <h1>Bukti Tanda Terima ZIS<br>Masjid Al-Muthmainnah</h1>
+  <div class="sub">Perumahan Departemen Keuangan · Kembangan Selatan · 1447 H</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('form')"><span class="tab-icon">📋</span>Form</div>
+  <div class="tab" onclick="switchTab('preview')"><span class="tab-icon">👁️</span>Preview</div>
+  <div class="tab" onclick="switchTab('history')"><span class="tab-icon">📜</span>Riwayat<span class="badge" id="history-count">0</span></div>
+  <div class="tab" onclick="switchTab('export')"><span class="tab-icon">📊</span>Export</div>
+</div>
+
+<div class="content">
+
+<!-- ===== FORM TAB ===== -->
+<div id="tab-form" class="tab-content active">
+  <div class="card">
+    <div class="card-title">Informasi Penerimaan</div>
+    <div class="form-grid">
+      <div class="form-row"><label>No. Bukti</label><input type="text" id="invno" readonly></div>
+      <div class="form-row"><label>Tanggal</label><input type="date" id="dt_issue"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Data Muzakki</div>
+    <div class="form-row"><label>Atas Nama (Muzakki)</label><input type="text" id="muzakki" placeholder="Nama keluarga / muzakki"></div>
+    <div class="form-row"><label>Nama Penyerah</label><input type="text" id="nama_penyerah" placeholder="Nama lengkap penyerah"></div>
+    <div class="form-row"><label>Alamat</label><input type="text" id="alamat_penyerah" placeholder="Contoh: Blok C19"></div>
+    <div class="form-row"><label>No. HP / WA</label><input type="tel" id="phone" placeholder="08xxxxxxxxxx atau +628xx"></div>
+    <div class="form-row"><label>Petugas</label><input type="text" id="petugas" placeholder="Nama petugas penerima"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Zakat Fitrah</div>
+    <div class="zakat-item">
+      <div><div class="zakat-label">Uang</div><div class="zakat-sub">jiwa × nominal</div></div>
+      <input type="number" id="fitrah_jiwa_uang" min="0" value="0" oninput="calcTotal()">
+      <input type="number" id="fitrah_uang" placeholder="Rp/jiwa" min="0" value="0" oninput="calcTotal()">
+    </div>
+    <div class="zakat-item">
+      <div><div class="zakat-label">Beras</div><div class="zakat-sub">jiwa × kg</div></div>
+      <input type="number" id="fitrah_jiwa_beras" min="0" value="0" oninput="calcTotal()">
+      <input type="number" id="fitrah_beras" placeholder="kg/jiwa" min="0" step="0.1" value="0" oninput="calcTotal()">
+    </div>
+    <div class="divider"></div>
+    <div class="card-title" style="margin-top:4px">Fidyah</div>
+    <div class="zakat-item">
+      <div><div class="zakat-label">Uang</div><div class="zakat-sub">jiwa × nominal</div></div>
+      <input type="number" id="fidyah_jiwa_uang" min="0" value="0" oninput="calcTotal()">
+      <input type="number" id="fidyah_uang" placeholder="Rp/jiwa" min="0" value="0" oninput="calcTotal()">
+    </div>
+    <div class="zakat-item">
+      <div><div class="zakat-label">Beras</div><div class="zakat-sub">jiwa × kg</div></div>
+      <input type="number" id="fidyah_jiwa_beras" min="0" value="0" oninput="calcTotal()">
+      <input type="number" id="fidyah_beras" placeholder="kg/jiwa" min="0" step="0.1" value="0" oninput="calcTotal()">
+    </div>
+    <div class="divider"></div>
+    <div class="card-title" style="margin-top:4px">Lainnya</div>
+    <div class="form-grid">
+      <div class="form-row"><label>Zakat Maal (Rp)</label><input type="number" id="maal" min="0" value="0" oninput="calcTotal()"></div>
+      <div class="form-row"><label>Infaq (Rp)</label><input type="number" id="infaq" min="0" value="0" oninput="calcTotal()"></div>
+    </div>
+    <div class="form-row"><label>Shadaqah (Rp)</label><input type="number" id="shdqh" min="0" value="0" oninput="calcTotal()"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Total</div>
+    <div class="total-row"><span class="total-label">Total Uang</span><span class="total-value" id="disp_total_uang">Rp 0</span></div>
+    <div class="total-row"><span class="total-label">Total Beras</span><span class="total-value" id="disp_total_beras">0 kg/liter</span></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="generatePreview()">👁️ Preview Bukti</button>
+  <button class="btn btn-gold" onclick="downloadPDF()">📄 Download PDF</button>
+  <button class="btn btn-wa" onclick="sendWA()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Kirim ke WhatsApp
+  </button>
+</div>
+
+<!-- ===== PREVIEW TAB ===== -->
+<div id="tab-preview" class="tab-content">
+  <div id="receipt-preview">
+    <div class="receipt-header">
+      <div class="r-arabic">بِسْمِ اللّٰهِ</div>
+      <h2>BUKTI TANDA TERIMA<br>PENERIMAAN ZAKAT FITRAH, INFAQ, & SHADAQAH 1447 H<br>MASJID AL-MUTHMAINNAH</h2>
+      <div class="r-sub">Perumahan Departemen Keuangan - Kembangan Selatan</div>
+    </div>
+    <div class="receipt-body">
+      <div class="r-info-row"><span class="r-info-label">No. Bukti</span><span class="r-info-value" id="r-invno">-</span></div>
+      <div class="r-info-row"><span class="r-info-label">Tanggal</span><span class="r-info-value" id="r-tanggal">-</span></div>
+      <div class="r-info-row"><span class="r-info-label">Atas Nama</span><span class="r-info-value" id="r-muzakki">-</span></div>
+      <table class="r-table">
+        <thead><tr><th>Jenis</th><th>Bentuk</th><th style="text-align:right">Jiwa</th><th style="text-align:right">Total</th></tr></thead>
+        <tbody id="r-table-body"></tbody>
+      </table>
+      <div class="r-total">
+        <div class="r-total-row"><span>Total Uang</span><span id="r-total-uang">Rp 0</span></div>
+        <div class="r-total-row"><span>Total Beras</span><span id="r-total-beras">0 kg/liter</span></div>
+      </div>
+      <div class="r-footer">
+        <div>
+          <div class="r-sign-label">Yang Menyerahkan,</div>
+          <div class="r-sign-name" id="r-penyerah">-</div>
+          <div class="r-sign-detail" id="r-alamat">-</div>
+          <div class="r-sign-detail" id="r-hp">-</div>
+        </div>
+        <div style="text-align:right">
+          <div class="r-sign-label">Yang Menerima,</div>
+          <div class="r-sign-name" id="r-petugas">-</div>
+          <div class="r-sign-detail">Panitia ZIS 1447 H</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="preview-empty" class="empty-state">
+    <div class="emoji">📋</div>
+    <div style="font-weight:600;margin-bottom:4px">Belum ada preview</div>
+    <div style="font-size:13px">Isi form lalu klik "Preview Bukti"</div>
+  </div>
+  <div id="wa-section" style="display:none">
+    <div class="wa-preview-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#128C7E"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Preview Pesan WhatsApp
+    </div>
+    <div class="wa-preview" id="wa-message-preview"></div>
+    <div class="info-box">
+      📎 <strong>Cara kirim PDF:</strong><br>
+      1. Klik tombol di bawah → WA terbuka dengan pesan otomatis<br>
+      2. Sebelum kirim, tap ikon 📎 di WA<br>
+      3. Pilih PDF dari folder <strong>Download</strong><br>
+      4. Kirim pesan + PDF bersama
+    </div>
+    <button class="btn btn-gold" onclick="downloadPDF()">📄 Download PDF Dulu</button>
+    <button class="btn btn-wa" onclick="openWA()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Buka WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- ===== HISTORY TAB ===== -->
+<div id="tab-history" class="tab-content">
+  <div id="history-list"></div>
+  <div id="history-empty" class="empty-state">
+    <div class="emoji">📜</div>
+    <div style="font-weight:600;margin-bottom:4px">Belum ada riwayat</div>
+    <div style="font-size:13px">Riwayat muncul setelah menyimpan</div>
+  </div>
+</div>
+
+<!-- ===== EXPORT TAB ===== -->
+<div id="tab-export" class="tab-content">
+  <div class="summary-card" id="summary-card">
+    <div class="summary-title">📊 Ringkasan Data</div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-label">Total Transaksi</div>
+        <div class="summary-value" id="sum-count">0</div>
+        <div class="summary-sub">penerimaan</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Total Uang</div>
+        <div class="summary-value" id="sum-uang">Rp 0</div>
+        <div class="summary-sub">terkumpul</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Total Beras</div>
+        <div class="summary-value" id="sum-beras">0 kg</div>
+        <div class="summary-sub">terkumpul</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Terakhir</div>
+        <div class="summary-value" id="sum-last" style="font-size:12px">-</div>
+        <div class="summary-sub">transaksi</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Export ke Excel</div>
+    <p style="font-size:13px;color:var(--text-soft);margin-bottom:16px;line-height:1.6;">
+      Download semua data riwayat sebagai file <strong>.xlsx</strong> yang bisa langsung dibuka di Microsoft Excel.
+    </p>
+    <button class="btn btn-excel" onclick="exportXLSX()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Download Data ZIS (.xlsx)
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Hapus Semua Data</div>
+    <p style="font-size:13px;color:var(--text-soft);margin-bottom:16px;line-height:1.6;">
+      Hapus semua riwayat dari aplikasi. <strong>Pastikan sudah export dulu</strong> sebelum menghapus.
+    </p>
+    <button class="btn" style="background:#e74c3c;color:white;" onclick="clearAllData()">
+      🗑️ Hapus Semua Riwayat
+    </button>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+// STATE
+// =====================
+let history_data = JSON.parse(localStorage.getItem('zis_history') || '[]');
+let invno_counter = parseInt(localStorage.getItem('zis_invno') || '20260001');
+let currentData = null;
+
+document.getElementById('invno').value = invno_counter;
+document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
+updateHistoryCount();
+
+// =====================
+// HELPERS
+// =====================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['form','preview','history','export'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'history') renderHistory();
+  if (tab === 'export') renderSummary();
+}
+
+function formatRp(n) { return 'Rp ' + parseInt(n||0).toLocaleString('id-ID'); }
+
+function formatDate(d) {
+  if (!d) return '-';
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const p = d.split('-');
+  return parseInt(p[2]) + ' ' + months[parseInt(p[1])-1] + ' ' + p[0];
+}
+
+function calcTotal() {
+  const fu = (parseFloat(document.getElementById('fitrah_jiwa_uang').value)||0) * (parseFloat(document.getElementById('fitrah_uang').value)||0);
+  const fdu = (parseFloat(document.getElementById('fidyah_jiwa_uang').value)||0) * (parseFloat(document.getElementById('fidyah_uang').value)||0);
+  const maal = parseFloat(document.getElementById('maal').value)||0;
+  const infaq = parseFloat(document.getElementById('infaq').value)||0;
+  const shdqh = parseFloat(document.getElementById('shdqh').value)||0;
+  const total_uang = fu + fdu + maal + infaq + shdqh;
+  const fb = (parseFloat(document.getElementById('fitrah_jiwa_beras').value)||0) * (parseFloat(document.getElementById('fitrah_beras').value)||0);
+  const fdb = (parseFloat(document.getElementById('fidyah_jiwa_beras').value)||0) * (parseFloat(document.getElementById('fidyah_beras').value)||0);
+  const total_beras = fb + fdb;
+  document.getElementById('disp_total_uang').textContent = formatRp(total_uang);
+  document.getElementById('disp_total_beras').textContent = total_beras.toFixed(1) + ' kg/liter';
+  return { total_uang, total_beras };
+}
+
+function getFormData() {
+  const totals = calcTotal();
+  return {
+    invno: document.getElementById('invno').value,
+    dt_issue: document.getElementById('dt_issue').value,
+    muzakki: document.getElementById('muzakki').value,
+    nama_penyerah: document.getElementById('nama_penyerah').value,
+    alamat_penyerah: document.getElementById('alamat_penyerah').value,
+    phone: document.getElementById('phone').value,
+    petugas: document.getElementById('petugas').value,
+    fitrah_jiwa_uang: parseFloat(document.getElementById('fitrah_jiwa_uang').value)||0,
+    fitrah_uang: parseFloat(document.getElementById('fitrah_uang').value)||0,
+    fitrah_jiwa_beras: parseFloat(document.getElementById('fitrah_jiwa_beras').value)||0,
+    fitrah_beras: parseFloat(document.getElementById('fitrah_beras').value)||0,
+    fidyah_jiwa_uang: parseFloat(document.getElementById('fidyah_jiwa_uang').value)||0,
+    fidyah_uang: parseFloat(document.getElementById('fidyah_uang').value)||0,
+    fidyah_jiwa_beras: parseFloat(document.getElementById('fidyah_jiwa_beras').value)||0,
+    fidyah_beras: parseFloat(document.getElementById('fidyah_beras').value)||0,
+    maal: parseFloat(document.getElementById('maal').value)||0,
+    infaq: parseFloat(document.getElementById('infaq').value)||0,
+    shdqh: parseFloat(document.getElementById('shdqh').value)||0,
+    total_uang: totals.total_uang,
+    total_beras: totals.total_beras,
+  };
+}
+
+// =====================
+// WA
+// =====================
+function buildWAMessage(d) {
+  return `Assalamualaikum wr. wb. Bapak/Ibu ${d.nama_penyerah}
+Alhamdulillah telah kami terima pembayaran zakat/fidyah/infaq/sedekah pada tanggal ${formatDate(d.dt_issue)}.
+
+Insya Allah zakat/fidyah/infaq/sedekah tsb akan kami salurkan sesuai amanah dan ketentuan syariah.
+
+Jazakumullah khairan katsiran.
+Semoga Allah membalas Anda dengan kebaikan yang banyak.
+
+Panitia ZIS Masjid Al Muthmainnah 1447 H`;
+}
+
+function buildWAUrl(d) {
+  let phone = d.phone.replace(/\+/g,'').replace(/\s/g,'').replace(/-/g,'');
+  if (phone.startsWith('0')) phone = '62' + phone.substring(1);
+  return `https://wa.me/${phone}?text=${encodeURIComponent(buildWAMessage(d))}`;
+}
+
+// =====================
+// PREVIEW
+// =====================
+function generatePreview() {
+  const d = getFormData();
+  if (!d.nama_penyerah) { showToast('⚠️ Isi Nama Penyerah dulu!'); return; }
+  currentData = d;
+
+  document.getElementById('r-invno').textContent = d.invno;
+  document.getElementById('r-tanggal').textContent = formatDate(d.dt_issue);
+  document.getElementById('r-muzakki').textContent = d.muzakki || d.nama_penyerah;
+  document.getElementById('r-penyerah').textContent = d.nama_penyerah;
+  document.getElementById('r-alamat').textContent = d.alamat_penyerah;
+  document.getElementById('r-hp').textContent = d.phone;
+  document.getElementById('r-petugas').textContent = d.petugas || 'Panitia Zakat';
+  document.getElementById('r-total-uang').textContent = formatRp(d.total_uang);
+  document.getElementById('r-total-beras').textContent = d.total_beras.toFixed(1) + ' kg/liter';
+
+  let rows = '';
+  if (d.fitrah_jiwa_uang>0) rows += `<tr><td>Zakat Fitrah</td><td>Uang</td><td style="text-align:right">${d.fitrah_jiwa_uang}</td><td style="text-align:right">${formatRp(d.fitrah_jiwa_uang*d.fitrah_uang)}</td></tr>`;
+  if (d.fitrah_jiwa_beras>0) rows += `<tr><td>Zakat Fitrah</td><td>Beras</td><td style="text-align:right">${d.fitrah_jiwa_beras}</td><td style="text-align:right">${(d.fitrah_jiwa_beras*d.fitrah_beras).toFixed(1)} kg</td></tr>`;
+  if (d.fidyah_jiwa_uang>0) rows += `<tr><td>Fidyah</td><td>Uang</td><td style="text-align:right">${d.fidyah_jiwa_uang}</td><td style="text-align:right">${formatRp(d.fidyah_jiwa_uang*d.fidyah_uang)}</td></tr>`;
+  if (d.fidyah_jiwa_beras>0) rows += `<tr><td>Fidyah</td><td>Beras</td><td style="text-align:right">${d.fidyah_jiwa_beras}</td><td style="text-align:right">${(d.fidyah_jiwa_beras*d.fidyah_beras).toFixed(1)} kg</td></tr>`;
+  if (d.maal>0) rows += `<tr><td>Zakat Maal</td><td>Uang</td><td style="text-align:right">-</td><td style="text-align:right">${formatRp(d.maal)}</td></tr>`;
+  if (d.infaq>0) rows += `<tr><td>Infaq</td><td>Uang</td><td style="text-align:right">-</td><td style="text-align:right">${formatRp(d.infaq)}</td></tr>`;
+  if (d.shdqh>0) rows += `<tr><td>Shadaqah</td><td>Uang</td><td style="text-align:right">-</td><td style="text-align:right">${formatRp(d.shdqh)}</td></tr>`;
+  if (!rows) rows = '<tr><td colspan="4" style="text-align:center;color:#999;padding:12px">Belum ada data</td></tr>';
+  document.getElementById('r-table-body').innerHTML = rows;
+  document.getElementById('wa-message-preview').textContent = buildWAMessage(d);
+  document.getElementById('receipt-preview').style.display = 'block';
+  document.getElementById('preview-empty').style.display = 'none';
+  document.getElementById('wa-section').style.display = 'block';
+  switchTab('preview');
+}
+
+// =====================
+// PDF
+// =====================
+function downloadPDF() {
+  const d = currentData || getFormData();
+  if (!d.nama_penyerah) { showToast('⚠️ Isi Nama Penyerah dulu!'); switchTab('form'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a5' });
+  const W = 148, margin = 12;
+  doc.setFillColor(26,58,42); doc.rect(0,0,W,38,'F');
+  doc.setFillColor(201,168,76); doc.rect(margin,36,W-margin*2,0.8,'F');
+  doc.setTextColor(240,208,128); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('BUKTI TANDA TERIMA PENERIMAAN ZAKAT FITRAH, INFAQ & SHADAQAH 1447 H',W/2,10,{align:'center'});
+  doc.setTextColor(255,255,255); doc.setFontSize(10);
+  doc.text('MASJID AL-MUTHMAINNAH',W/2,17,{align:'center'});
+  doc.setFontSize(8); doc.text('Perumahan Departemen Keuangan - Kembangan Selatan',W/2,23,{align:'center'});
+  doc.setTextColor(26,58,42); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  let y = 46;
+  doc.text('No.',margin,y); doc.setFont('helvetica','bold'); doc.text(d.invno,45,y);
+  doc.setFont('helvetica','normal'); y+=6;
+  doc.text('Tanggal',margin,y); doc.setFont('helvetica','bold'); doc.text(formatDate(d.dt_issue),45,y);
+  doc.setFont('helvetica','normal'); y+=6;
+  doc.text('Atas Nama',margin,y); doc.setFont('helvetica','bold'); doc.text(d.muzakki||d.nama_penyerah,45,y);
+  y+=10;
+  doc.setFillColor(216,243,220); doc.rect(margin,y-4,W-margin*2,7,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(26,58,42);
+  doc.text('Jenis',margin+2,y); doc.text('Bentuk',55,y);
+  doc.text('Jiwa',90,y,{align:'right'}); doc.text('Total',W-margin,y,{align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(50,50,50); y+=7;
+  const rows=[];
+  if(d.fitrah_jiwa_uang>0) rows.push(['Zakat Fitrah','Uang',d.fitrah_jiwa_uang,formatRp(d.fitrah_jiwa_uang*d.fitrah_uang)]);
+  if(d.fitrah_jiwa_beras>0) rows.push(['Zakat Fitrah','Beras',d.fitrah_jiwa_beras,(d.fitrah_jiwa_beras*d.fitrah_beras).toFixed(1)+' kg']);
+  if(d.fidyah_jiwa_uang>0) rows.push(['Fidyah','Uang',d.fidyah_jiwa_uang,formatRp(d.fidyah_jiwa_uang*d.fidyah_uang)]);
+  if(d.fidyah_jiwa_beras>0) rows.push(['Fidyah','Beras',d.fidyah_jiwa_beras,(d.fidyah_jiwa_beras*d.fidyah_beras).toFixed(1)+' kg']);
+  if(d.maal>0) rows.push(['Zakat Maal','Uang','-',formatRp(d.maal)]);
+  if(d.infaq>0) rows.push(['Infaq','Uang','-',formatRp(d.infaq)]);
+  if(d.shdqh>0) rows.push(['Shadaqah','Uang','-',formatRp(d.shdqh)]);
+  rows.forEach((r,i)=>{
+    if(i%2===0){doc.setFillColor(250,247,240);doc.rect(margin,y-3.5,W-margin*2,6,'F');}
+    doc.text(r[0],margin+2,y); doc.text(r[1],55,y);
+    doc.text(String(r[2]),90,y,{align:'right'}); doc.text(r[3],W-margin,y,{align:'right'});
+    y+=6;
+  });
+  y+=3;
+  doc.setFillColor(216,243,220); doc.rect(margin,y-4,W-margin*2,14,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(26,58,42);
+  doc.text('Total Uang',margin+4,y+1); doc.text(formatRp(d.total_uang),W-margin-2,y+1,{align:'right'});
+  doc.text('Total Beras',margin+4,y+7); doc.text(d.total_beras.toFixed(1)+' kg/liter',W-margin-2,y+7,{align:'right'});
+  y+=22;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,90,90);
+  doc.text('Yang Menyerahkan,',margin,y); doc.text('Yang Menerima,',W-margin,y,{align:'right'});
+  y+=18;
+  doc.setFont('helvetica','bold'); doc.setTextColor(26,58,42);
+  doc.text(d.nama_penyerah,margin,y); doc.text(d.petugas||'Panitia Zakat',W-margin,y,{align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(90,90,90);
+  doc.text(d.alamat_penyerah,margin,y+4); doc.text('Panitia ZIS 1447 H',W-margin,y+4,{align:'right'});
+  doc.save(d.invno+'-'+d.nama_penyerah+' '+d.alamat_penyerah+'.pdf');
+  showToast('📄 PDF didownload!');
+}
+
+// =====================
+// WA ACTIONS
+// =====================
+function sendWA() {
+  const d = getFormData();
+  if (!d.nama_penyerah) { showToast('⚠️ Isi Nama Penyerah dulu!'); return; }
+  if (!d.phone) { showToast('⚠️ Isi No. HP dulu!'); return; }
+  currentData = d;
+  generatePreview();
+}
+
+function openWA() {
+  const d = currentData;
+  if (!d) { showToast('⚠️ Preview dulu!'); return; }
+  if (!d.phone) { showToast('⚠️ No. HP kosong!'); return; }
+  saveToHistory(d);
+  window.open(buildWAUrl(d), '_blank');
+}
+
+function saveToHistory(d) {
+  history_data.unshift({ ...d });
+  localStorage.setItem('zis_history', JSON.stringify(history_data.slice(0, 500)));
+  invno_counter++;
+  localStorage.setItem('zis_invno', invno_counter);
+  document.getElementById('invno').value = invno_counter;
+  clearForm();
+  updateHistoryCount();
+}
+
+function clearForm() {
+  ['muzakki','nama_penyerah','alamat_penyerah','phone','petugas'].forEach(id => document.getElementById(id).value = '');
+  ['fitrah_jiwa_uang','fitrah_uang','fitrah_jiwa_beras','fitrah_beras',
+   'fidyah_jiwa_uang','fidyah_uang','fidyah_jiwa_beras','fidyah_beras',
+   'maal','infaq','shdqh'].forEach(id => document.getElementById(id).value = 0);
+  calcTotal();
+  document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
+  currentData = null;
+}
+
+// =====================
+// EXPORT XLSX - format sama persis dengan sample_data.xlsx
+// =====================
+function exportXLSX() {
+  if (!history_data.length) { showToast('⚠️ Belum ada data untuk diexport!'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const ws = {};
+
+  // ---- HEADER ROW 1 (row 1) ----
+  // A1:A2 merged - Invoice No.
+  // B1:B2 merged - Tanggal Penerimaan
+  // C1:C2 merged - Jiwa
+  // D1:E1 merged - Zakat Fitrah
+  // F1:F2 merged - Jiwa (Fidyah)
+  // G1:H1 merged - Fidyah
+  // I1:I2 merged - Zakat Maal
+  // J1:J2 merged - Infaq
+  // K1:K2 merged - Shadaqah
+  // L1:L2 merged - Total Pembayaran
+  // M1:M2 merged - Total Beras (kg)
+  // N1:N2 merged - Muzakki
+  // O1:P1 merged - Yang Menyerahkan
+  // Q1:Q2 merged - Petugas
+  // R1:R2 merged - PDF
+
+  const headerStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '2D6A4F' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } }
+    }
+  };
+
+  function setCell(addr, value, style) {
+    ws[addr] = { v: value, t: typeof value === 'number' ? 'n' : 's', s: style };
+  }
+
+  // Row 1 headers
+  setCell('A1', 'Invoice No.', headerStyle);
+  setCell('B1', 'Tanggal Penerimaan', headerStyle);
+  setCell('C1', 'Jiwa', headerStyle);
+  setCell('D1', 'Zakat Fitrah', headerStyle);
+  setCell('F1', 'Jiwa', headerStyle);
+  setCell('G1', 'Fidyah', headerStyle);
+  setCell('I1', 'Zakat Maal', headerStyle);
+  setCell('J1', 'Infaq', headerStyle);
+  setCell('K1', 'Shadaqah', headerStyle);
+  setCell('L1', 'Total Pembayaran', headerStyle);
+  setCell('M1', 'Total Beras (kg)', headerStyle);
+  setCell('N1', 'Muzakki', headerStyle);
+  setCell('O1', 'Yang Menyerahkan', headerStyle);
+  setCell('Q1', 'Petugas', headerStyle);
+  setCell('R1', 'PDF', headerStyle);
+
+  // Row 2 sub-headers
+  setCell('D2', 'Uang', headerStyle);
+  setCell('E2', 'Beras (kg/liter)', headerStyle);
+  setCell('G2', 'Uang', headerStyle);
+  setCell('H2', 'Beras (kg/liter)', headerStyle);
+  setCell('O2', 'Nama', headerStyle);
+  setCell('P2', 'Alamat', headerStyle);
+
+  // Placeholder for merged cells (needed by SheetJS)
+  ['A2','B2','C2','F2','I2','J2','K2','L2','M2','N2','Q2','R2'].forEach(addr => {
+    ws[addr] = { v: '', t: 's', s: headerStyle };
+  });
+
+  // Merged cells
+  ws['!merges'] = [
+    {s:{r:0,c:0}, e:{r:1,c:0}},   // A1:A2
+    {s:{r:0,c:1}, e:{r:1,c:1}},   // B1:B2
+    {s:{r:0,c:2}, e:{r:1,c:2}},   // C1:C2
+    {s:{r:0,c:3}, e:{r:0,c:4}},   // D1:E1
+    {s:{r:0,c:5}, e:{r:1,c:5}},   // F1:F2
+    {s:{r:0,c:6}, e:{r:0,c:7}},   // G1:H1
+    {s:{r:0,c:8}, e:{r:1,c:8}},   // I1:I2
+    {s:{r:0,c:9}, e:{r:1,c:9}},   // J1:J2
+    {s:{r:0,c:10}, e:{r:1,c:10}}, // K1:K2
+    {s:{r:0,c:11}, e:{r:1,c:11}}, // L1:L2
+    {s:{r:0,c:12}, e:{r:1,c:12}}, // M1:M2
+    {s:{r:0,c:13}, e:{r:1,c:13}}, // N1:N2
+    {s:{r:0,c:14}, e:{r:0,c:15}}, // O1:P1
+    {s:{r:0,c:16}, e:{r:1,c:16}}, // Q1:Q2
+    {s:{r:0,c:17}, e:{r:1,c:17}}, // R1:R2
+  ];
+
+  // Data style
+  const dataStyle = {
+    alignment: { vertical: 'center' },
+    border: {
+      top: { style: 'thin', color: { rgb: 'D4C9A8' } },
+      bottom: { style: 'thin', color: { rgb: 'D4C9A8' } },
+      left: { style: 'thin', color: { rgb: 'D4C9A8' } },
+      right: { style: 'thin', color: { rgb: 'D4C9A8' } }
+    }
+  };
+  const dataStyleAlt = { ...dataStyle, fill: { fgColor: { rgb: 'F5FFF8' } } };
+  const numStyle = { ...dataStyle, alignment: { horizontal: 'right', vertical: 'center' }, numFmt: '#,##0' };
+  const numStyleAlt = { ...numStyle, fill: { fgColor: { rgb: 'F5FFF8' } } };
+
+  // ---- DATA ROWS (start from row 3) ----
+  const cols = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+
+  history_data.forEach((d, i) => {
+    const row = i + 3;
+    const isAlt = i % 2 === 1;
+    const ds = isAlt ? dataStyleAlt : dataStyle;
+    const ns = isAlt ? numStyleAlt : numStyle;
+
+    const fitrah_total_uang = (d.fitrah_jiwa_uang||0) * (d.fitrah_uang||0);
+    const fitrah_total_beras = (d.fitrah_jiwa_beras||0) * (d.fitrah_beras||0);
+    const fidyah_total_uang = (d.fidyah_jiwa_uang||0) * (d.fidyah_uang||0);
+    const fidyah_total_beras = (d.fidyah_jiwa_beras||0) * (d.fidyah_beras||0);
+    const jiwa_fitrah = (d.fitrah_jiwa_uang||0) + (d.fitrah_jiwa_beras||0);
+    const jiwa_fidyah = (d.fidyah_jiwa_uang||0) + (d.fidyah_jiwa_beras||0);
+
+    ws[`A${row}`] = { v: d.invno, t: 'n', s: ds };
+    ws[`B${row}`] = { v: d.dt_issue, t: 's', s: ds };
+    ws[`C${row}`] = { v: jiwa_fitrah, t: 'n', s: ns };
+    ws[`D${row}`] = { v: fitrah_total_uang, t: 'n', s: ns };
+    ws[`E${row}`] = { v: fitrah_total_beras, t: 'n', s: ns };
+    ws[`F${row}`] = { v: jiwa_fidyah, t: 'n', s: ns };
+    ws[`G${row}`] = { v: fidyah_total_uang, t: 'n', s: ns };
+    ws[`H${row}`] = { v: fidyah_total_beras, t: 'n', s: ns };
+    ws[`I${row}`] = { v: d.maal||0, t: 'n', s: ns };
+    ws[`J${row}`] = { v: d.infaq||0, t: 'n', s: ns };
+    ws[`K${row}`] = { v: d.shdqh||0, t: 'n', s: ns };
+    ws[`L${row}`] = { v: d.total_uang||0, t: 'n', s: ns };
+    ws[`M${row}`] = { v: d.total_beras||0, t: 'n', s: ns };
+    ws[`N${row}`] = { v: d.muzakki||'', t: 's', s: ds };
+    ws[`O${row}`] = { v: d.nama_penyerah||'', t: 's', s: ds };
+    ws[`P${row}`] = { v: d.alamat_penyerah||'', t: 's', s: ds };
+    ws[`Q${row}`] = { v: d.petugas||'', t: 's', s: ds };
+    ws[`R${row}`] = { v: '', t: 's', s: ds }; // PDF path (kosong dari HP)
+  });
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:12}, // A - Invoice No
+    {wch:14}, // B - Tanggal
+    {wch:6},  // C - Jiwa
+    {wch:14}, // D - Fitrah Uang
+    {wch:14}, // E - Fitrah Beras
+    {wch:6},  // F - Jiwa Fidyah
+    {wch:14}, // G - Fidyah Uang
+    {wch:14}, // H - Fidyah Beras
+    {wch:14}, // I - Zakat Maal
+    {wch:14}, // J - Infaq
+    {wch:14}, // K - Shadaqah
+    {wch:16}, // L - Total Pembayaran
+    {wch:14}, // M - Total Beras
+    {wch:30}, // N - Muzakki
+    {wch:22}, // O - Nama Penyerah
+    {wch:12}, // P - Alamat
+    {wch:14}, // Q - Petugas
+    {wch:40}, // R - PDF
+  ];
+
+  // Row heights
+  ws['!rows'] = [{ hpt: 30 }, { hpt: 25 }];
+
+  // Sheet range
+  const lastRow = history_data.length + 2;
+  ws['!ref'] = `A1:R${lastRow}`;
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Database Penerimaan Zakat');
+
+  // Download
+  const now = new Date();
+  const fname = `ZIS_AlMuthmainnah_1447H_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showToast('📊 File Excel berhasil didownload!');
+}
+
+// =====================
+// HISTORY & SUMMARY
+// =====================
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  if (!history_data.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  list.innerHTML = history_data.map(d=>`
+    <div class="history-item">
+      <div>
+        <div class="history-no">No. ${d.invno}</div>
+        <div class="history-name">${d.nama_penyerah}</div>
+        <div class="history-date">${formatDate(d.dt_issue)} · ${d.alamat_penyerah}</div>
+      </div>
+      <div>
+        <div class="history-amount">${formatRp(d.total_uang)}</div>
+        <div class="history-beras">${parseFloat(d.total_beras||0).toFixed(1)} kg beras</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderSummary() {
+  const count = history_data.length;
+  const totalUang = history_data.reduce((s,d) => s+(d.total_uang||0), 0);
+  const totalBeras = history_data.reduce((s,d) => s+(d.total_beras||0), 0);
+  const last = history_data.length ? formatDate(history_data[0].dt_issue) : '-';
+  document.getElementById('sum-count').textContent = count;
+  document.getElementById('sum-uang').textContent = formatRp(totalUang);
+  document.getElementById('sum-beras').textContent = totalBeras.toFixed(1) + ' kg';
+  document.getElementById('sum-last').textContent = last;
+}
+
+function updateHistoryCount() {
+  document.getElementById('history-count').textContent = history_data.length;
+}
+
+function clearAllData() {
+  if (!confirm('Yakin hapus semua data? Pastikan sudah export dulu!')) return;
+  history_data.length = 0;
+  localStorage.removeItem('zis_history');
+  updateHistoryCount();
+  renderSummary();
+  showToast('🗑️ Semua data dihapus');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+calcTotal();
+</script>
+</body>
+</html>
