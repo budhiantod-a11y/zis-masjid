@@ -107,11 +107,19 @@
   /* SUMMARY CARD */
   .summary-card { background:linear-gradient(135deg,var(--green-dark),var(--green-mid)); border-radius:16px; padding:16px; margin-bottom:16px; color:white; }
   .summary-title { font-size:11px; font-weight:600; opacity:0.7; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; }
-  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .summary-top { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
   .summary-item { background:rgba(255,255,255,0.1); border-radius:10px; padding:10px; }
   .summary-label { font-size:10px; opacity:0.7; margin-bottom:2px; }
   .summary-value { font-size:16px; font-weight:700; }
   .summary-sub { font-size:10px; opacity:0.7; }
+  .summary-breakdown { background:rgba(0,0,0,0.15); border-radius:12px; padding:12px; margin-top:4px; }
+  .summary-breakdown-title { font-size:10px; font-weight:700; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+  .breakdown-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.08); font-size:12px; }
+  .breakdown-row:last-child { border-bottom:none; padding-bottom:0; }
+  .breakdown-label { opacity:0.8; }
+  .breakdown-vals { text-align:right; }
+  .breakdown-uang { font-weight:700; font-size:13px; }
+  .breakdown-beras { font-size:10px; opacity:0.65; }
 
   .empty-state { text-align:center; padding:40px 20px; color:var(--text-soft); }
   .empty-state .emoji { font-size:40px; margin-bottom:12px; }
@@ -280,30 +288,75 @@
 
 <!-- ===== EXPORT TAB ===== -->
 <div id="tab-export" class="tab-content">
-  <div class="summary-card" id="summary-card">
+  <div class="summary-card">
     <div class="summary-title">📊 Ringkasan Data</div>
-    <div class="summary-grid">
+    <div class="summary-top">
       <div class="summary-item">
         <div class="summary-label">Total Transaksi</div>
         <div class="summary-value" id="sum-count">0</div>
         <div class="summary-sub">penerimaan</div>
       </div>
       <div class="summary-item">
-        <div class="summary-label">Total Uang</div>
-        <div class="summary-value" id="sum-uang">Rp 0</div>
-        <div class="summary-sub">terkumpul</div>
-      </div>
-      <div class="summary-item">
-        <div class="summary-label">Total Beras</div>
-        <div class="summary-value" id="sum-beras">0 kg</div>
-        <div class="summary-sub">terkumpul</div>
-      </div>
-      <div class="summary-item">
-        <div class="summary-label">Terakhir</div>
+        <div class="summary-label">Transaksi Terakhir</div>
         <div class="summary-value" id="sum-last" style="font-size:12px">-</div>
-        <div class="summary-sub">transaksi</div>
+        <div class="summary-sub">&nbsp;</div>
       </div>
     </div>
+    <div class="summary-breakdown">
+      <div class="summary-breakdown-title">Breakdown per Jenis</div>
+      <div class="breakdown-row">
+        <div class="breakdown-label">Zakat Fitrah</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-fitrah-uang">Rp 0</div>
+          <div class="breakdown-beras" id="sum-fitrah-beras">0 kg beras</div>
+          <div class="breakdown-beras" id="sum-fitrah-jiwa">0 jiwa</div>
+        </div>
+      </div>
+      <div class="breakdown-row">
+        <div class="breakdown-label">Fidyah</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-fidyah-uang">Rp 0</div>
+          <div class="breakdown-beras" id="sum-fidyah-beras">0 kg beras</div>
+        </div>
+      </div>
+      <div class="breakdown-row">
+        <div class="breakdown-label">Zakat Maal</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-maal">Rp 0</div>
+        </div>
+      </div>
+      <div class="breakdown-row">
+        <div class="breakdown-label">Infaq</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-infaq">Rp 0</div>
+        </div>
+      </div>
+      <div class="breakdown-row">
+        <div class="breakdown-label">Shadaqah</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-shdqh">Rp 0</div>
+        </div>
+      </div>
+      <div class="breakdown-row" style="margin-top:4px;border-top:1px solid rgba(255,255,255,0.2);padding-top:8px;">
+        <div class="breakdown-label" style="font-weight:700;opacity:1">TOTAL</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-total-uang">Rp 0</div>
+          <div class="breakdown-beras" id="sum-total-beras">0 kg beras</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔢 Nomor Invoice</div>
+    <p style="font-size:13px;color:var(--text-soft);margin-bottom:12px;line-height:1.6;">
+      Pakai HP baru atau browser baru? Set nomor invoice supaya tidak duplikat dengan data sebelumnya.
+    </p>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="invno-set" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);" placeholder="Contoh: 20260010">
+      <button class="btn btn-primary" style="width:auto;padding:10px 16px;margin:0;font-size:13px;" onclick="setInvno()">Set</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-soft);margin-top:8px;">Nomor invoice saat ini: <strong id="invno-current">-</strong></div>
   </div>
 
   <div class="card">
@@ -779,13 +832,43 @@ function deleteHistory(index) {
 
 function renderSummary() {
   const count = history_data.length;
+  const last = history_data.length ? formatDate(history_data[0].dt_issue) : '-';
+
+  const fitrahJiwa = history_data.reduce((s,d) => s+(d.fitrah_jiwa_uang||0)+(d.fitrah_jiwa_beras||0), 0);
+  const fitrahUang = history_data.reduce((s,d) => s+((d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0)), 0);
+  const fitrahBeras = history_data.reduce((s,d) => s+((d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)), 0);
+  const fidyahUang = history_data.reduce((s,d) => s+((d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+  const fidyahBeras = history_data.reduce((s,d) => s+((d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0)), 0);
+  const maal = history_data.reduce((s,d) => s+(d.maal||0), 0);
+  const infaq = history_data.reduce((s,d) => s+(d.infaq||0), 0);
+  const shdqh = history_data.reduce((s,d) => s+(d.shdqh||0), 0);
   const totalUang = history_data.reduce((s,d) => s+(d.total_uang||0), 0);
   const totalBeras = history_data.reduce((s,d) => s+(d.total_beras||0), 0);
-  const last = history_data.length ? formatDate(history_data[0].dt_issue) : '-';
+
   document.getElementById('sum-count').textContent = count;
-  document.getElementById('sum-uang').textContent = formatRp(totalUang);
-  document.getElementById('sum-beras').textContent = totalBeras.toFixed(1) + ' kg';
   document.getElementById('sum-last').textContent = last;
+  document.getElementById('sum-fitrah-uang').textContent = formatRp(fitrahUang);
+  document.getElementById('sum-fitrah-beras').textContent = fitrahBeras.toFixed(1) + ' kg beras';
+  document.getElementById('sum-fitrah-jiwa').textContent = fitrahJiwa + ' jiwa';
+  document.getElementById('sum-fidyah-uang').textContent = formatRp(fidyahUang);
+  document.getElementById('sum-fidyah-beras').textContent = fidyahBeras.toFixed(1) + ' kg beras';
+  document.getElementById('sum-maal').textContent = formatRp(maal);
+  document.getElementById('sum-infaq').textContent = formatRp(infaq);
+  document.getElementById('sum-shdqh').textContent = formatRp(shdqh);
+  document.getElementById('sum-total-uang').textContent = formatRp(totalUang);
+  document.getElementById('sum-total-beras').textContent = totalBeras.toFixed(1) + ' kg beras';
+  document.getElementById('invno-current').textContent = invno_counter;
+}
+
+function setInvno() {
+  const val = parseInt(document.getElementById('invno-set').value);
+  if (!val || val < 1) { showToast('⚠️ Masukkan nomor yang valid!'); return; }
+  invno_counter = val;
+  localStorage.setItem('zis_invno', invno_counter);
+  document.getElementById('invno').value = invno_counter;
+  document.getElementById('invno-current').textContent = invno_counter;
+  document.getElementById('invno-set').value = '';
+  showToast('✅ Nomor invoice diset ke ' + val);
 }
 
 function updateHistoryCount() {
