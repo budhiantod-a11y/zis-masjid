@@ -95,12 +95,14 @@
   .wa-preview-label { font-size:11px; font-weight:700; color:#128C7E; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
 
   /* HISTORY */
-  .history-item { background:white; border-radius:12px; padding:14px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid var(--green-light); display:flex; justify-content:space-between; align-items:center; }
+  .history-item { background:white; border-radius:12px; padding:14px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid var(--green-light); display:flex; justify-content:space-between; align-items:center; gap:8px; }
   .history-no { font-size:11px; color:var(--text-soft); }
   .history-name { font-size:14px; font-weight:700; margin:2px 0; }
   .history-date { font-size:11px; color:var(--text-soft); }
   .history-amount { font-size:15px; font-weight:700; color:var(--green-mid); text-align:right; }
   .history-beras { font-size:11px; color:var(--text-soft); text-align:right; }
+  .btn-delete { background:none; border:none; cursor:pointer; font-size:18px; padding:4px; opacity:0.35; transition:opacity 0.2s; flex-shrink:0; }
+  .btn-delete:hover { opacity:1; }
 
   /* SUMMARY CARD */
   .summary-card { background:linear-gradient(135deg,var(--green-dark),var(--green-mid)); border-radius:16px; padding:16px; margin-bottom:16px; color:white; }
@@ -617,6 +619,7 @@ function exportXLSX() {
   setCell('O1', 'Yang Menyerahkan', headerStyle);
   setCell('Q1', 'Petugas', headerStyle);
   setCell('R1', 'PDF', headerStyle);
+  setCell('S1', 'No. HP', headerStyle);
 
   // Row 2 sub-headers
   setCell('D2', 'Uang', headerStyle);
@@ -627,7 +630,7 @@ function exportXLSX() {
   setCell('P2', 'Alamat', headerStyle);
 
   // Placeholder for merged cells (needed by SheetJS)
-  ['A2','B2','C2','F2','I2','J2','K2','L2','M2','N2','Q2','R2'].forEach(addr => {
+  ['A2','B2','C2','F2','I2','J2','K2','L2','M2','N2','Q2','R2','S2'].forEach(addr => {
     ws[addr] = { v: '', t: 's', s: headerStyle };
   });
 
@@ -648,6 +651,7 @@ function exportXLSX() {
     {s:{r:0,c:14}, e:{r:0,c:15}}, // O1:P1
     {s:{r:0,c:16}, e:{r:1,c:16}}, // Q1:Q2
     {s:{r:0,c:17}, e:{r:1,c:17}}, // R1:R2
+    {s:{r:0,c:18}, e:{r:1,c:18}}, // S1:S2
   ];
 
   // Data style
@@ -698,6 +702,7 @@ function exportXLSX() {
     ws[`P${row}`] = { v: d.alamat_penyerah||'', t: 's', s: ds };
     ws[`Q${row}`] = { v: d.petugas||'', t: 's', s: ds };
     ws[`R${row}`] = { v: '', t: 's', s: ds }; // PDF path (kosong dari HP)
+    ws[`S${row}`] = { v: d.phone||'', t: 's', s: ds };
   });
 
   // Column widths
@@ -720,6 +725,7 @@ function exportXLSX() {
     {wch:12}, // P - Alamat
     {wch:14}, // Q - Petugas
     {wch:40}, // R - PDF
+    {wch:16}, // S - No HP
   ];
 
   // Row heights
@@ -727,7 +733,7 @@ function exportXLSX() {
 
   // Sheet range
   const lastRow = history_data.length + 2;
-  ws['!ref'] = `A1:R${lastRow}`;
+  ws['!ref'] = `A1:S${lastRow}`;
 
   XLSX.utils.book_append_sheet(wb, ws, 'Database Penerimaan Zakat');
 
@@ -746,9 +752,9 @@ function renderHistory() {
   const empty = document.getElementById('history-empty');
   if (!history_data.length) { list.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-  list.innerHTML = history_data.map(d=>`
+  list.innerHTML = history_data.map((d, i)=>`
     <div class="history-item">
-      <div>
+      <div style="flex:1">
         <div class="history-no">No. ${d.invno}</div>
         <div class="history-name">${d.nama_penyerah}</div>
         <div class="history-date">${formatDate(d.dt_issue)} · ${d.alamat_penyerah}</div>
@@ -757,7 +763,18 @@ function renderHistory() {
         <div class="history-amount">${formatRp(d.total_uang)}</div>
         <div class="history-beras">${parseFloat(d.total_beras||0).toFixed(1)} kg beras</div>
       </div>
+      <button class="btn-delete" onclick="deleteHistory(${i})" title="Hapus">🗑️</button>
     </div>`).join('');
+}
+
+function deleteHistory(index) {
+  if (!confirm(`Hapus data ${history_data[index].nama_penyerah} (No. ${history_data[index].invno})?`)) return;
+  history_data.splice(index, 1);
+  localStorage.setItem('zis_history', JSON.stringify(history_data));
+  updateHistoryCount();
+  renderHistory();
+  renderSummary();
+  showToast('🗑️ Data dihapus');
 }
 
 function renderSummary() {
