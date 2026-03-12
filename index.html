@@ -129,6 +129,13 @@
   .badge { display:inline-block; background:var(--gold); color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; margin-left:4px; }
 
   .info-box { background:#fff8e1; border:1px solid var(--gold); border-radius:10px; padding:12px; margin-bottom:12px; font-size:12px; color:#7a6000; line-height:1.6; }
+
+  .doa-item { padding:4px 0 8px; }
+  .doa-subtitle { font-size:11px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+  .doa-arabic { font-family:'Amiri',serif; font-size:20px; color:var(--green-dark); text-align:right; direction:rtl; line-height:2.2; margin-bottom:8px; }
+  .doa-latin { font-size:13px; font-style:italic; color:var(--green-mid); font-weight:500; margin-bottom:6px; line-height:1.6; }
+  .doa-arti { font-size:12px; color:var(--text-soft); line-height:1.6; background:var(--green-pale); padding:8px 10px; border-radius:8px; }
+  .doa-divider { height:1px; background:var(--green-pale); margin:12px 0; }
 </style>
 </head>
 <body>
@@ -145,6 +152,7 @@
   <div class="tab" onclick="switchTab('preview')"><span class="tab-icon">👁️</span>Preview</div>
   <div class="tab" onclick="switchTab('history')"><span class="tab-icon">📜</span>Riwayat<span class="badge" id="history-count">0</span></div>
   <div class="tab" onclick="switchTab('export')"><span class="tab-icon">📊</span>Export</div>
+  <div class="tab" onclick="switchTab('doa')"><span class="tab-icon">🤲</span>Doa</div>
 </div>
 
 <div class="content">
@@ -381,6 +389,38 @@
   </div>
 </div>
 
+<!-- ===== DOA TAB ===== -->
+<div id="tab-doa" class="tab-content">
+
+  <div class="card">
+    <div class="card-title">Niat Zakat Fitrah</div>
+
+    <div class="doa-item">
+      <div class="doa-subtitle">Untuk diri sendiri</div>
+      <div class="doa-arabic">نَوَيْتُ أَنْ أُخْرِجَ زَكَاةَ الْفِطْرِ عَنْ نَفْسِي فَرْضًا لِلَّهِ تَعَالَى</div>
+      <div class="doa-latin">Nawaitu an ukhrija zakaatal fithri 'an nafsii fardhan lillaahi ta'aalaa</div>
+      <div class="doa-arti">"Aku niat mengeluarkan zakat fitrah untuk diriku sendiri, fardhu karena Allah Ta'ala."</div>
+    </div>
+    <div class="doa-divider"></div>
+    <div class="doa-item">
+      <div class="doa-subtitle">Untuk diri sendiri dan seluruh keluarga</div>
+      <div class="doa-arabic">نَوَيْتُ أَنْ أُخْرِجَ زَكَاةَ الْفِطْرِ عَنِّي وَعَنْ جَمِيْعِ مَا يَلْزَمُنِي نَفَقَاتُهُمْ فَرْضًا لِلَّهِ تَعَالَى</div>
+      <div class="doa-latin">Nawaitu an ukhrija zakaatal fithri 'annii wa 'an jamii'i maa yalzamunii nafaqaatuhum fardhan lillaahi ta'aalaa</div>
+      <div class="doa-arti">"Aku niat mengeluarkan zakat fitrah untuk diriku dan seluruh orang yang nafkahnya menjadi tanggunganku, fardhu karena Allah Ta'ala."</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Doa Menerima Zakat (Petugas)</div>
+    <div class="doa-item">
+      <div class="doa-arabic">آجَرَكَ اللهُ فِيمَا أَعْطَيْتَ، وَبَارَكَ فِيمَا أَبْقَيْتَ، وَجَعَلَ اللهُ لَكَ طَهُوْرًا</div>
+      <div class="doa-latin">Aajarakallahu fiimaa a'thaita, wa baaraka fiimaa abqaita, wa ja'alallahu laka thahuuraa</div>
+      <div class="doa-arti">"Semoga Allah memberikan pahala atas apa yang engkau berikan, memberkahi apa yang engkau sisakan, dan menjadikannya sebagai penyuci bagimu."</div>
+    </div>
+  </div>
+
+</div>
+
 </div>
 <div class="toast" id="toast"></div>
 
@@ -401,7 +441,7 @@ updateHistoryCount();
 // =====================
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['form','preview','history','export'][i] === tab);
+    t.classList.toggle('active', ['form','preview','history','export','doa'][i] === tab);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
