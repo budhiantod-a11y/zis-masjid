@@ -356,6 +356,36 @@
   </div>
 
   <div class="card">
+    <div class="card-title">✍️ Tanda Tangan & Cap</div>
+    <p style="font-size:13px;color:var(--text-soft);margin-bottom:14px;line-height:1.6;">
+      Upload gambar tanda tangan dan cap masjid. Akan otomatis muncul di PDF bukti penerimaan. Gunakan foto dengan <strong>background putih atau transparan (PNG)</strong> untuk hasil terbaik.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tanda Tangan</div>
+        <label id="ttd-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);border-radius:10px;padding:12px;cursor:pointer;background:var(--cream);min-height:80px;">
+          <img id="ttd-preview" src="" style="display:none;max-width:100%;max-height:60px;object-fit:contain;margin-bottom:4px;">
+          <span id="ttd-placeholder" style="font-size:11px;color:var(--text-soft);text-align:center;">📎 Tap untuk upload</span>
+          <input type="file" accept="image/*" style="display:none" onchange="loadImage(this,'ttd')">
+        </label>
+        <button onclick="clearImage('ttd')" id="ttd-clear" style="display:none;width:100%;margin-top:6px;padding:6px;border:none;border-radius:8px;background:#fee;color:#c00;font-size:11px;font-weight:600;cursor:pointer;">Hapus</button>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Cap / Stempel</div>
+        <label id="cap-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);border-radius:10px;padding:12px;cursor:pointer;background:var(--cream);min-height:80px;">
+          <img id="cap-preview" src="" style="display:none;max-width:100%;max-height:60px;object-fit:contain;margin-bottom:4px;">
+          <span id="cap-placeholder" style="font-size:11px;color:var(--text-soft);text-align:center;">📎 Tap untuk upload</span>
+          <input type="file" accept="image/*" style="display:none" onchange="loadImage(this,'cap')">
+        </label>
+        <button onclick="clearImage('cap')" id="cap-clear" style="display:none;width:100%;margin-top:6px;padding:6px;border:none;border-radius:8px;background:#fee;color:#c00;font-size:11px;font-weight:600;cursor:pointer;">Hapus</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-soft);background:var(--green-pale);border-radius:8px;padding:8px 10px;">
+      💡 Gambar disimpan di browser ini saja. Upload ulang jika ganti HP/browser.
+    </div>
+  </div>
+
+  <div class="card">
     <div class="card-title">🔢 Nomor Invoice</div>
     <p style="font-size:13px;color:var(--text-soft);margin-bottom:12px;line-height:1.6;">
       Pakai HP baru atau browser baru? Set nomor invoice supaya tidak duplikat dengan data sebelumnya.
@@ -611,7 +641,22 @@ function downloadPDF() {
   y+=22;
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,90,90);
   doc.text('Yang Menyerahkan,',margin,y); doc.text('Yang Menerima,',W-margin,y,{align:'right'});
-  y+=18;
+
+  // Tanda tangan & cap
+  const ttdData = localStorage.getItem('zis_ttd');
+  const capData = localStorage.getItem('zis_cap');
+  const imgY = y + 2;
+  const imgH = 16; // tinggi area gambar mm
+  const imgW = 30; // lebar gambar mm
+
+  if (ttdData) {
+    try { doc.addImage(ttdData, 'PNG', margin, imgY, imgW, imgH, '', 'FAST'); } catch(e) {}
+  }
+  if (capData) {
+    try { doc.addImage(capData, 'PNG', W - margin - imgW, imgY, imgW, imgH, '', 'FAST'); } catch(e) {}
+  }
+
+  y+=20;
   doc.setFont('helvetica','bold'); doc.setTextColor(26,58,42);
   doc.text(d.nama_penyerah,margin,y); doc.text(d.petugas||'Panitia Zakat',W-margin,y,{align:'right'});
   doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(90,90,90);
@@ -635,8 +680,9 @@ function openWA() {
   const d = currentData;
   if (!d) { showToast('⚠️ Preview dulu!'); return; }
   if (!d.phone) { showToast('⚠️ No. HP kosong!'); return; }
-  saveToHistory(d);
+  // Buka WA dulu sebelum apapun supaya tidak diblokir browser
   window.open(buildWAUrl(d), '_blank');
+  saveToHistory(d);
 }
 
 function saveToHistory(d) {
@@ -905,6 +951,51 @@ function renderSummary() {
   document.getElementById('invno-current').textContent = invno_counter;
 }
 
+// =====================
+// TANDA TANGAN & CAP
+// =====================
+function loadImage(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = e.target.result;
+    localStorage.setItem('zis_' + type, data);
+    showImagePreview(type, data);
+    showToast('✅ Gambar tersimpan!');
+  };
+  reader.readAsDataURL(file);
+}
+
+function showImagePreview(type, data) {
+  const preview = document.getElementById(type + '-preview');
+  const placeholder = document.getElementById(type + '-placeholder');
+  const clearBtn = document.getElementById(type + '-clear');
+  preview.src = data;
+  preview.style.display = 'block';
+  placeholder.style.display = 'none';
+  clearBtn.style.display = 'block';
+}
+
+function clearImage(type) {
+  localStorage.removeItem('zis_' + type);
+  const preview = document.getElementById(type + '-preview');
+  const placeholder = document.getElementById(type + '-placeholder');
+  const clearBtn = document.getElementById(type + '-clear');
+  preview.src = '';
+  preview.style.display = 'none';
+  placeholder.style.display = 'block';
+  clearBtn.style.display = 'none';
+  showToast('🗑️ Gambar dihapus');
+}
+
+function initImages() {
+  ['ttd','cap'].forEach(type => {
+    const data = localStorage.getItem('zis_' + type);
+    if (data) showImagePreview(type, data);
+  });
+}
+
 function setInvno() {
   const val = parseInt(document.getElementById('invno-set').value);
   if (!val || val < 1) { showToast('⚠️ Masukkan nomor yang valid!'); return; }
@@ -937,6 +1028,7 @@ function showToast(msg) {
 }
 
 calcTotal();
+initImages();
 </script>
 </body>
 </html>
