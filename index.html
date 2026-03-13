@@ -731,7 +731,7 @@ async function syncFromSheets() {
     const rows = json.data.slice(1).filter(r => r[0]); // skip header, skip empty
     const parsed = rows.map(r => ({
       invno: String(r[0]),
-      dt_issue: r[1] ? String(r[1]).split('T')[0] : '',
+      dt_issue: r[1] ? parseSheetDate(r[1]) : '',
       fitrah_jiwa_uang: 0, fitrah_uang: 0,
       fitrah_jiwa_beras: 0, fitrah_beras: 0,
       fidyah_jiwa_uang: 0, fidyah_uang: 0,
@@ -768,6 +768,7 @@ async function syncFromSheets() {
     }
 
     updateHistoryCount();
+    document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
     showSyncStatus('✅ Data tersinkronisasi (' + parsed.length + ' data)', '#2d6a4f');
   } catch(err) {
     showSyncStatus('⚠️ Gagal sync — pakai data lokal', '#c9a84c');
@@ -863,6 +864,27 @@ function switchTab(tab) {
 }
 
 function formatRp(n) { return 'Rp ' + parseInt(n||0).toLocaleString('id-ID'); }
+
+function parseSheetDate(val) {
+  if (!val) return '';
+  const s = String(val).trim();
+  // ISO format: 2026-03-13 or 2026-03-13T00:00:00.000Z
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.split('T')[0];
+  // US format: 3/13/2026 or 03/13/2026
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+    const [m, d, y] = s.split('/');
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  // DD/MM/YYYY (common in ID locale)
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+    const [d, m, y] = s.split('/');
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  // Fallback: try native Date parse
+  const dt = new Date(s);
+  if (!isNaN(dt)) return dt.toISOString().split('T')[0];
+  return s;
+}
 
 function formatDate(d) {
   if (!d) return '-';
