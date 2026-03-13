@@ -130,6 +130,18 @@
 
   .info-box { background:#fff8e1; border:1px solid var(--gold); border-radius:10px; padding:12px; margin-bottom:12px; font-size:12px; color:#7a6000; line-height:1.6; }
 
+  .rtab { flex:1; padding:10px 6px; border:1.5px solid var(--border); border-radius:10px; font-size:12px; font-weight:600; color:var(--text-soft); background:white; cursor:pointer; transition:all 0.2s; }
+  .rtab.active { background:var(--green-mid); border-color:var(--green-mid); color:white; }
+  .report-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .report-table th { background:var(--green-pale); padding:7px 8px; text-align:left; font-weight:700; color:var(--green-dark); font-size:11px; border-bottom:2px solid var(--green-light); }
+  .report-table td { padding:7px 8px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+  .report-table tr:last-child td { border-bottom:none; }
+  .report-table .td-num { text-align:right; font-weight:600; }
+  .report-table .td-del { text-align:center; }
+  .btn-del { background:none; border:none; cursor:pointer; font-size:14px; opacity:0.35; transition:opacity 0.2s; }
+  .btn-del:hover { opacity:1; }
+  .td-kum { text-align:right; font-weight:700; color:var(--green-mid); }
+
   .doa-item { padding:4px 0 8px; }
   .doa-subtitle { font-size:11px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
   .doa-arabic { font-family:'Amiri',serif; font-size:20px; color:var(--green-dark); text-align:right; direction:rtl; line-height:2.2; margin-bottom:8px; }
@@ -152,6 +164,7 @@
   <div class="tab" onclick="switchTab('preview')"><span class="tab-icon">👁️</span>Preview</div>
   <div class="tab" onclick="switchTab('history')"><span class="tab-icon">📜</span>Riwayat<span class="badge" id="history-count">0</span></div>
   <div class="tab" onclick="switchTab('export')"><span class="tab-icon">📊</span>Export</div>
+  <div class="tab" onclick="switchTab('report')"><span class="tab-icon">📈</span>Report</div>
   <div class="tab" onclick="switchTab('doa')"><span class="tab-icon">🤲</span>Doa</div>
 </div>
 
@@ -212,7 +225,7 @@
   <div class="card">
     <div class="card-title">Total</div>
     <div class="total-row"><span class="total-label">Total Uang</span><span class="total-value" id="disp_total_uang">Rp 0</span></div>
-    <div class="total-row"><span class="total-label">Total Beras</span><span class="total-value" id="disp_total_beras">0 kg/liter</span></div>
+    <div class="total-row"><span class="total-label">Total Beras</span><span class="total-value" id="disp_total_beras">0 kg</span></div>
   </div>
 
   <button class="btn btn-primary" onclick="generatePreview()">👁️ Preview Bukti</button>
@@ -241,7 +254,7 @@
       </table>
       <div class="r-total">
         <div class="r-total-row"><span>Total Uang</span><span id="r-total-uang">Rp 0</span></div>
-        <div class="r-total-row"><span>Total Beras</span><span id="r-total-beras">0 kg/liter</span></div>
+        <div class="r-total-row"><span>Total Beras</span><span id="r-total-beras">0 kg</span></div>
       </div>
       <div class="r-footer">
         <div>
@@ -346,55 +359,62 @@
         </div>
       </div>
       <div class="breakdown-row" style="margin-top:4px;border-top:1px solid rgba(255,255,255,0.2);padding-top:8px;">
-        <div class="breakdown-label" style="font-weight:700;opacity:1">TOTAL</div>
+        <div class="breakdown-label" style="font-weight:700;opacity:1">TOTAL MASUK</div>
         <div class="breakdown-vals">
           <div class="breakdown-uang" id="sum-total-uang">Rp 0</div>
           <div class="breakdown-beras" id="sum-total-beras">0 kg beras</div>
+        </div>
+      </div>
+      <div class="breakdown-row" style="padding-top:4px;">
+        <div class="breakdown-label" style="opacity:0.8">Total Keluar</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-total-keluar" style="color:#ffb3b3;">Rp 0</div>
+        </div>
+      </div>
+      <div class="breakdown-row" style="border-top:1px solid rgba(255,255,255,0.2);padding-top:8px;margin-top:4px;">
+        <div class="breakdown-label" style="font-weight:700;opacity:1">SALDO</div>
+        <div class="breakdown-vals">
+          <div class="breakdown-uang" id="sum-saldo" style="font-size:15px;">Rp 0</div>
         </div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">✍️ Tanda Tangan & Cap</div>
-    <p style="font-size:13px;color:var(--text-soft);margin-bottom:14px;line-height:1.6;">
-      Upload gambar tanda tangan dan cap masjid. Akan otomatis muncul di PDF bukti penerimaan. Gunakan foto dengan <strong>background putih atau transparan (PNG)</strong> untuk hasil terbaik.
+    <div class="card-title">🖊️ Tanda Tangan & Cap</div>
+    <p style="font-size:13px;color:var(--text-soft);margin-bottom:12px;line-height:1.6;">
+      Upload tanda tangan dan cap/stempel untuk disisipkan otomatis ke PDF.
     </p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;">
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Tanda Tangan</div>
-        <label id="ttd-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);border-radius:10px;padding:12px;cursor:pointer;background:var(--cream);min-height:80px;">
-          <img id="ttd-preview" src="" style="display:none;max-width:100%;max-height:60px;object-fit:contain;margin-bottom:4px;">
-          <span id="ttd-placeholder" style="font-size:11px;color:var(--text-soft);text-align:center;">📎 Tap untuk upload</span>
-          <input type="file" accept="image/*" style="display:none" onchange="loadImage(this,'ttd')">
-        </label>
-        <button onclick="clearImage('ttd')" id="ttd-clear" style="display:none;width:100%;margin-top:6px;padding:6px;border:none;border-radius:8px;background:#fee;color:#c00;font-size:11px;font-weight:600;cursor:pointer;">Hapus</button>
+        <div style="font-size:11px;font-weight:600;color:var(--text-soft);margin-bottom:6px;">TANDA TANGAN</div>
+        <div style="border:2px dashed var(--border);border-radius:10px;padding:8px;text-align:center;min-height:60px;display:flex;align-items:center;justify-content:center;">
+          <img id="img-ttd" src="" style="max-height:50px;max-width:100%;display:none;">
+          <span id="lbl-ttd" style="font-size:11px;color:var(--text-soft);">Belum diupload</span>
+        </div>
+        <input type="file" id="inp-ttd" accept="image/*" style="display:none" onchange="uploadImg('ttd')">
+        <button class="btn btn-primary" style="margin-top:6px;padding:8px;font-size:12px;" onclick="document.getElementById('inp-ttd').click()">Upload TTD</button>
       </div>
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Cap / Stempel</div>
-        <label id="cap-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);border-radius:10px;padding:12px;cursor:pointer;background:var(--cream);min-height:80px;">
-          <img id="cap-preview" src="" style="display:none;max-width:100%;max-height:60px;object-fit:contain;margin-bottom:4px;">
-          <span id="cap-placeholder" style="font-size:11px;color:var(--text-soft);text-align:center;">📎 Tap untuk upload</span>
-          <input type="file" accept="image/*" style="display:none" onchange="loadImage(this,'cap')">
-        </label>
-        <button onclick="clearImage('cap')" id="cap-clear" style="display:none;width:100%;margin-top:6px;padding:6px;border:none;border-radius:8px;background:#fee;color:#c00;font-size:11px;font-weight:600;cursor:pointer;">Hapus</button>
+        <div style="font-size:11px;font-weight:600;color:var(--text-soft);margin-bottom:6px;">CAP / STEMPEL</div>
+        <div style="border:2px dashed var(--border);border-radius:10px;padding:8px;text-align:center;min-height:60px;display:flex;align-items:center;justify-content:center;">
+          <img id="img-cap" src="" style="max-height:50px;max-width:100%;display:none;">
+          <span id="lbl-cap" style="font-size:11px;color:var(--text-soft);">Belum diupload</span>
+        </div>
+        <input type="file" id="inp-cap" accept="image/*" style="display:none" onchange="uploadImg('cap')">
+        <button class="btn btn-primary" style="margin-top:6px;padding:8px;font-size:12px;" onclick="document.getElementById('inp-cap').click()">Upload Cap</button>
       </div>
-    </div>
-    <div style="font-size:11px;color:var(--text-soft);background:var(--green-pale);border-radius:8px;padding:8px 10px;">
-      💡 Gambar disimpan di browser ini saja. Upload ulang jika ganti HP/browser.
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">🔢 Nomor Invoice</div>
+    <div class="card-title">🔄 Sinkronisasi</div>
     <p style="font-size:13px;color:var(--text-soft);margin-bottom:12px;line-height:1.6;">
-      Pakai HP baru atau browser baru? Set nomor invoice supaya tidak duplikat dengan data sebelumnya.
+      Data otomatis sync saat app dibuka. Tap tombol ini untuk sync manual.
     </p>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="number" id="invno-set" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);" placeholder="Contoh: 20260010">
-      <button class="btn btn-primary" style="width:auto;padding:10px 16px;margin:0;font-size:13px;" onclick="setInvno()">Set</button>
-    </div>
-    <div style="font-size:11px;color:var(--text-soft);margin-top:8px;">Nomor invoice saat ini: <strong id="invno-current">-</strong></div>
+    <button class="btn btn-primary" onclick="syncFromSheets()" style="margin-bottom:8px;">🔄 Sync dari Google Sheets</button>
+    <button class="btn" style="background:var(--gold);color:white;" onclick="uploadExistingData()">⬆️ Upload Data Lokal ke Google Sheets</button>
+    <p style="font-size:11px;color:var(--text-soft);margin-top:8px;line-height:1.6;">Upload data lokal yang belum ada di Google Sheets. Aman diklik berkali-kali — tidak akan dobel.</p>
   </div>
 
   <div class="card">
@@ -419,7 +439,202 @@
   </div>
 </div>
 
-<!-- ===== DOA TAB ===== -->
+<!-- ===== REPORT TAB ===== -->
+<div id="tab-report" class="tab-content">
+
+  <!-- Sub-tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <button id="rtab-uang" class="rtab active" onclick="switchReport('uang')">💰 Penggunaan Uang</button>
+    <button id="rtab-beras" class="rtab" onclick="switchReport('beras')">🌾 Konversi Beras</button>
+  </div>
+
+  <!-- ===== REPORT: PENGGUNAAN UANG ===== -->
+  <div id="report-uang">
+    <!-- Saldo summary -->
+    <div style="background:linear-gradient(135deg,var(--green-dark),var(--green-mid));border-radius:16px;padding:16px;margin-bottom:12px;color:white;">
+      <div style="font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Ringkasan Keuangan</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
+          <div style="font-size:10px;opacity:0.7;">Total Masuk</div>
+          <div style="font-size:13px;font-weight:700;" id="r-total-masuk">Rp 0</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
+          <div style="font-size:10px;opacity:0.7;">Total Keluar</div>
+          <div style="font-size:13px;font-weight:700;" id="r-total-keluar">Rp 0</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
+          <div style="font-size:10px;opacity:0.7;">Saldo</div>
+          <div style="font-size:13px;font-weight:700;" id="r-saldo">Rp 0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form input pengeluaran -->
+    <div class="card">
+      <div class="card-title">+ Tambah Pengeluaran</div>
+      <div class="form-row">
+        <label>Kantong</label>
+        <select id="k-kantong" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);">
+          <option value="k1">🕌 Fitrah + Fidyah</option>
+          <option value="k2">💼 Zakat Maal</option>
+          <option value="k3">🤲 Infaq + Shadaqah</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Tanggal</label><input type="date" id="k-tanggal"></div>
+      <div class="form-row"><label>Item / Keterangan</label><input type="text" id="k-ket" placeholder="Contoh: Beras 5kg untuk mustahiq"></div>
+      <div class="form-grid">
+        <div class="form-row"><label>Jumlah</label><input type="number" id="k-qty" placeholder="1" min="1" value="1" oninput="calcKeluar()"></div>
+        <div class="form-row"><label>Harga Satuan (Rp)</label><input type="number" id="k-harga" placeholder="0" min="0" oninput="calcKeluar()"></div>
+      </div>
+      <div style="background:var(--green-pale);border-radius:10px;padding:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;font-weight:600;color:var(--green-dark);">Total</span>
+        <span style="font-size:15px;font-weight:700;color:var(--green-mid);" id="k-total-preview">Rp 0</span>
+      </div>
+      <button class="btn btn-primary" onclick="addKeluar()">+ Tambah</button>
+    </div>
+
+    <!-- Kartu kantong 1: Fitrah + Fidyah -->
+    <div class="card">
+      <div class="card-title">🕌 Fitrah + Fidyah</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;">Peruntukan: pembelian beras, ongkos angkut, dll</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:var(--green-pale);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--green-dark);font-weight:600;margin-bottom:4px;">MASUK</div>
+          <div style="font-size:13px;font-weight:700;color:var(--green-mid);" id="k1-masuk">Rp 0</div>
+        </div>
+        <div style="background:#fff0f0;border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:#c0392b;font-weight:600;margin-bottom:4px;">KELUAR</div>
+          <div style="font-size:13px;font-weight:700;color:#e74c3c;" id="k1-keluar">Rp 0</div>
+        </div>
+        <div style="background:var(--green-dark);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;margin-bottom:4px;">SALDO</div>
+          <div style="font-size:13px;font-weight:700;" id="k1-saldo">Rp 0</div>
+        </div>
+      </div>
+      <div id="k1-list"></div>
+      <div id="k1-empty" class="empty-state" style="padding:16px;display:none;">
+        <div style="font-size:24px;margin-bottom:6px;">💸</div>
+        <div style="font-size:13px;">Belum ada pengeluaran</div>
+      </div>
+    </div>
+
+    <!-- Kartu kantong 2: Zakat Maal -->
+    <div class="card">
+      <div class="card-title">💼 Zakat Maal</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;">Peruntukan: amplop mustahiq, distribusi, dll</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:var(--green-pale);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--green-dark);font-weight:600;margin-bottom:4px;">MASUK</div>
+          <div style="font-size:13px;font-weight:700;color:var(--green-mid);" id="k2-masuk">Rp 0</div>
+        </div>
+        <div style="background:#fff0f0;border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:#c0392b;font-weight:600;margin-bottom:4px;">KELUAR</div>
+          <div style="font-size:13px;font-weight:700;color:#e74c3c;" id="k2-keluar">Rp 0</div>
+        </div>
+        <div style="background:var(--green-dark);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;margin-bottom:4px;">SALDO</div>
+          <div style="font-size:13px;font-weight:700;" id="k2-saldo">Rp 0</div>
+        </div>
+      </div>
+      <div id="k2-list"></div>
+      <div id="k2-empty" class="empty-state" style="padding:16px;display:none;">
+        <div style="font-size:24px;margin-bottom:6px;">💸</div>
+        <div style="font-size:13px;">Belum ada pengeluaran</div>
+      </div>
+    </div>
+
+    <!-- Kartu kantong 3: Infaq + Shadaqah -->
+    <div class="card">
+      <div class="card-title">🤲 Infaq + Shadaqah</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;">Peruntukan: kegiatan masjid, operasional, dll</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:var(--green-pale);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--green-dark);font-weight:600;margin-bottom:4px;">MASUK</div>
+          <div style="font-size:13px;font-weight:700;color:var(--green-mid);" id="k3-masuk">Rp 0</div>
+        </div>
+        <div style="background:#fff0f0;border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:#c0392b;font-weight:600;margin-bottom:4px;">KELUAR</div>
+          <div style="font-size:13px;font-weight:700;color:#e74c3c;" id="k3-keluar">Rp 0</div>
+        </div>
+        <div style="background:var(--green-dark);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;margin-bottom:4px;">SALDO</div>
+          <div style="font-size:13px;font-weight:700;" id="k3-saldo">Rp 0</div>
+        </div>
+      </div>
+      <div id="k3-list"></div>
+      <div id="k3-empty" class="empty-state" style="padding:16px;display:none;">
+        <div style="font-size:24px;margin-bottom:6px;">💸</div>
+        <div style="font-size:13px;">Belum ada pengeluaran</div>
+      </div>
+    </div>
+
+    <button class="btn btn-excel" onclick="exportKeluarXLSX()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Export Laporan Keuangan (.xlsx)
+    </button>
+  </div>
+
+  <!-- ===== REPORT: KONVERSI BERAS ===== -->
+  <div id="report-beras" style="display:none;">
+    <!-- Summary -->
+    <div style="background:linear-gradient(135deg,var(--green-dark),var(--green-mid));border-radius:16px;padding:16px;margin-bottom:12px;color:white;">
+      <div style="font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Ringkasan Beras</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
+          <div style="font-size:10px;opacity:0.7;">Total Beras</div>
+          <div style="font-size:13px;font-weight:700;" id="r-total-kg">0 kg</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
+          <div style="font-size:10px;opacity:0.7;">Total Paket</div>
+          <div style="font-size:13px;font-weight:700;" id="r-total-paket">0 paket</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
+          <div style="font-size:10px;opacity:0.7;">Rata-rata/Paket</div>
+          <div style="font-size:13px;font-weight:700;" id="r-avg-paket">0 kg</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form input konversi beras -->
+    <div class="card">
+      <div class="card-title">+ Tambah Entri Beras</div>
+      <div class="form-row">
+        <label>Pilih Transaksi</label>
+        <select id="b-trx" onchange="selectBerasTrx()" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);">
+          <option value="">— Pilih transaksi —</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="form-row">
+          <label>Beras (kg) — otomatis</label>
+          <input type="number" id="b-kg" placeholder="0" min="0" step="0.1" style="background:#f0f0f0;color:var(--text-soft);" readonly>
+        </div>
+        <div class="form-row">
+          <label>Dijadikan (paket)</label>
+          <input type="number" id="b-paket" placeholder="0" min="1">
+        </div>
+      </div>
+      <div class="form-row"><label>Keterangan</label><input type="text" id="b-ket" placeholder="Opsional"></div>
+      <button class="btn btn-primary" onclick="addBeras()">+ Tambah</button>
+    </div>
+
+    <!-- Tabel beras -->
+    <div class="card">
+      <div class="card-title">Daftar Konversi Beras</div>
+      <div id="beras-list"></div>
+      <div id="beras-empty" class="empty-state" style="padding:20px;">
+        <div style="font-size:30px;margin-bottom:8px;">🌾</div>
+        <div style="font-weight:600;font-size:13px;">Belum ada entri beras</div>
+      </div>
+    </div>
+    <button class="btn btn-excel" onclick="exportBerasXLSX()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Export Laporan Beras (.xlsx)
+    </button>
+  </div>
+
+  <!-- ===== REPORT: PER JENIS ZAKAT ===== -->
+</div>
 <div id="tab-doa" class="tab-content">
 
   <div class="card">
@@ -456,27 +671,194 @@
 
 <script>
 // =====================
+// CONFIG
+// =====================
+const GS_URL = 'https://script.google.com/macros/s/AKfycbyko2AuDROLpnRRNQ5UbNLUck_HxGCcmJwYBP4MM_kH8b0-6sowbIKV_Rd7I8XmLgLL/exec';
+
+// =====================
 // STATE
 // =====================
 let history_data = JSON.parse(localStorage.getItem('zis_history') || '[]');
 let invno_counter = parseInt(localStorage.getItem('zis_invno') || '20260001');
+let kantong_data = JSON.parse(localStorage.getItem('zis_kantong') || '{"k1":[],"k2":[],"k3":[]}');
 let currentData = null;
+let isSyncing = false;
 
 document.getElementById('invno').value = invno_counter;
 document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
 updateHistoryCount();
+
+// Sync dari Google Sheets saat app dibuka
+syncFromSheets();
+
+// =====================
+// GOOGLE SHEETS SYNC
+// =====================
+function showSyncStatus(msg, color) {
+  let el = document.getElementById('sync-status');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sync-status';
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:12px;font-weight:600;z-index:9999;transition:opacity 0.5s;';
+    document.body.prepend(el);
+  }
+  el.style.background = color || '#2d6a4f';
+  el.style.color = 'white';
+  el.style.opacity = '1';
+  el.textContent = msg;
+  if (color !== 'loading') setTimeout(() => el.style.opacity = '0', 3000);
+}
+
+async function syncFromSheets() {
+  if (isSyncing) return;
+  isSyncing = true;
+  showSyncStatus('🔄 Sinkronisasi data...', '#2d6a4f');
+  try {
+    const res = await fetch(GS_URL);
+    const json = await res.json();
+    if (json.status !== 'ok' || !json.data || json.data.length < 2) {
+      // Sheet kosong atau hanya header — inisialisasi header
+      await fetch(GS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'init_headers' })
+      });
+      isSyncing = false;
+      showSyncStatus('✅ Sheet siap', '#2d6a4f');
+      return;
+    }
+
+    // Parse data dari sheet (skip header row)
+    const rows = json.data.slice(1).filter(r => r[0]); // skip header, skip empty
+    const parsed = rows.map(r => ({
+      invno: String(r[0]),
+      dt_issue: r[1] ? String(r[1]).split('T')[0] : '',
+      fitrah_jiwa_uang: 0, fitrah_uang: 0,
+      fitrah_jiwa_beras: 0, fitrah_beras: 0,
+      fidyah_jiwa_uang: 0, fidyah_uang: 0,
+      fidyah_jiwa_beras: 0, fidyah_beras: 0,
+      maal: parseFloat(r[8])||0,
+      infaq: parseFloat(r[9])||0,
+      shdqh: parseFloat(r[10])||0,
+      total_uang: parseFloat(r[11])||0,
+      total_beras: parseFloat(r[12])||0,
+      muzakki: r[13]||'',
+      nama_penyerah: r[14]||'',
+      alamat_penyerah: r[15]||'',
+      petugas: r[16]||'',
+      phone: r[17]||'',
+      // Reconstruct jiwa dari total
+      _fitrah_total_uang: parseFloat(r[3])||0,
+      _fitrah_total_beras: parseFloat(r[4])||0,
+      _fidyah_total_uang: parseFloat(r[6])||0,
+      _fidyah_total_beras: parseFloat(r[7])||0,
+    }));
+
+    // Update history dan invno dari sheet
+    history_data = parsed;
+    localStorage.setItem('zis_history', JSON.stringify(history_data));
+
+    // Set invno_counter ke nomor terakhir + 1
+    if (parsed.length > 0) {
+      const maxInvno = Math.max(...parsed.map(d => parseInt(d.invno)||0));
+      if (maxInvno >= invno_counter) {
+        invno_counter = maxInvno + 1;
+        localStorage.setItem('zis_invno', invno_counter);
+        document.getElementById('invno').value = invno_counter;
+      }
+    }
+
+    updateHistoryCount();
+    showSyncStatus('✅ Data tersinkronisasi (' + parsed.length + ' data)', '#2d6a4f');
+  } catch(err) {
+    showSyncStatus('⚠️ Gagal sync — pakai data lokal', '#c9a84c');
+  }
+  isSyncing = false;
+}
+
+async function saveToSheets(d) {
+  const fitrahJiwa = (d.fitrah_jiwa_uang||0) + (d.fitrah_jiwa_beras||0);
+  const fidyahJiwa = (d.fidyah_jiwa_uang||0) + (d.fidyah_jiwa_beras||0);
+  const row = [
+    d.invno, d.dt_issue,
+    fitrahJiwa,
+    (d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0),
+    (d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0),
+    fidyahJiwa,
+    (d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0),
+    (d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0),
+    d.maal||0, d.infaq||0, d.shdqh||0,
+    d.total_uang||0, d.total_beras||0,
+    d.muzakki||'', d.nama_penyerah||'',
+    d.alamat_penyerah||'', d.petugas||'', d.phone||''
+  ];
+  try {
+    await fetch(GS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'save', row })
+    });
+  } catch(err) {
+    console.error('Gagal simpan ke Sheets:', err);
+  }
+}
+
+async function uploadExistingData() {
+  if (!history_data.length) { showToast('⚠️ Tidak ada data lokal!'); return; }
+  showSyncStatus('🔄 Mengecek data di Google Sheets...', '#2d6a4f');
+
+  try {
+    // Ambil data yang sudah ada di Sheets
+    const res = await fetch(GS_URL);
+    const json = await res.json();
+    const existingInvnos = new Set();
+    if (json.status === 'ok' && json.data && json.data.length > 1) {
+      json.data.slice(1).forEach(r => { if (r[0]) existingInvnos.add(String(r[0])); });
+    }
+
+    // Filter hanya yang belum ada di Sheets
+    const toUpload = history_data.filter(d => !existingInvnos.has(String(d.invno)));
+
+    if (!toUpload.length) {
+      showSyncStatus('✅ Semua data sudah ada di Google Sheets', '#2d6a4f');
+      return;
+    }
+
+    showSyncStatus(`⬆️ Mengupload ${toUpload.length} data baru...`, '#2d6a4f');
+
+    // Upload satu per satu (dari yang terlama)
+    const sorted = [...toUpload].reverse();
+    for (const d of sorted) {
+      await saveToSheets(d);
+    }
+
+    showSyncStatus(`✅ ${toUpload.length} data berhasil diupload!`, '#2d6a4f');
+  } catch(err) {
+    showSyncStatus('⚠️ Gagal upload — coba lagi', '#e74c3c');
+  }
+}
+
+async function deleteFromSheets(invno) {
+  try {
+    await fetch(GS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'delete', invno: String(invno) })
+    });
+  } catch(err) {
+    console.error('Gagal hapus dari Sheets:', err);
+  }
+}
 
 // =====================
 // HELPERS
 // =====================
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['form','preview','history','export','doa'][i] === tab);
+    t.classList.toggle('active', ['form','preview','history','export','report','doa'][i] === tab);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'history') renderHistory();
   if (tab === 'export') renderSummary();
+  if (tab === 'report') { renderKeluar(); switchReport('uang'); }
 }
 
 function formatRp(n) { return 'Rp ' + parseInt(n||0).toLocaleString('id-ID'); }
@@ -499,7 +881,7 @@ function calcTotal() {
   const fdb = (parseFloat(document.getElementById('fidyah_jiwa_beras').value)||0) * (parseFloat(document.getElementById('fidyah_beras').value)||0);
   const total_beras = fb + fdb;
   document.getElementById('disp_total_uang').textContent = formatRp(total_uang);
-  document.getElementById('disp_total_beras').textContent = total_beras.toFixed(1) + ' kg/liter';
+  document.getElementById('disp_total_beras').textContent = total_beras.toFixed(1) + ' kg';
   return { total_uang, total_beras };
 }
 
@@ -566,7 +948,7 @@ function generatePreview() {
   document.getElementById('r-hp').textContent = d.phone;
   document.getElementById('r-petugas').textContent = d.petugas || 'Panitia Zakat';
   document.getElementById('r-total-uang').textContent = formatRp(d.total_uang);
-  document.getElementById('r-total-beras').textContent = d.total_beras.toFixed(1) + ' kg/liter';
+  document.getElementById('r-total-beras').textContent = d.total_beras.toFixed(1) + ' kg';
 
   let rows = '';
   if (d.fitrah_jiwa_uang>0) rows += `<tr><td>Zakat Fitrah</td><td>Uang</td><td style="text-align:right">${d.fitrah_jiwa_uang}</td><td style="text-align:right">${formatRp(d.fitrah_jiwa_uang*d.fitrah_uang)}</td></tr>`;
@@ -637,26 +1019,11 @@ function downloadPDF() {
   doc.setFillColor(216,243,220); doc.rect(margin,y-4,W-margin*2,14,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(26,58,42);
   doc.text('Total Uang',margin+4,y+1); doc.text(formatRp(d.total_uang),W-margin-2,y+1,{align:'right'});
-  doc.text('Total Beras',margin+4,y+7); doc.text(d.total_beras.toFixed(1)+' kg/liter',W-margin-2,y+7,{align:'right'});
+  doc.text('Total Beras',margin+4,y+7); doc.text(d.total_beras.toFixed(1)+' kg',W-margin-2,y+7,{align:'right'});
   y+=22;
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,90,90);
   doc.text('Yang Menyerahkan,',margin,y); doc.text('Yang Menerima,',W-margin,y,{align:'right'});
-
-  // Tanda tangan & cap
-  const ttdData = localStorage.getItem('zis_ttd');
-  const capData = localStorage.getItem('zis_cap');
-  const imgY = y + 2;
-  const imgH = 16; // tinggi area gambar mm
-  const imgW = 30; // lebar gambar mm
-
-  if (ttdData) {
-    try { doc.addImage(ttdData, 'PNG', margin, imgY, imgW, imgH, '', 'FAST'); } catch(e) {}
-  }
-  if (capData) {
-    try { doc.addImage(capData, 'PNG', W - margin - imgW, imgY, imgW, imgH, '', 'FAST'); } catch(e) {}
-  }
-
-  y+=20;
+  y+=18;
   doc.setFont('helvetica','bold'); doc.setTextColor(26,58,42);
   doc.text(d.nama_penyerah,margin,y); doc.text(d.petugas||'Panitia Zakat',W-margin,y,{align:'right'});
   doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(90,90,90);
@@ -693,6 +1060,8 @@ function saveToHistory(d) {
   document.getElementById('invno').value = invno_counter;
   clearForm();
   updateHistoryCount();
+  // Sync ke Google Sheets (background)
+  saveToSheets(d).then(() => showSyncStatus('✅ Tersimpan ke Google Sheets', '#2d6a4f'));
 }
 
 function clearForm() {
@@ -767,9 +1136,9 @@ function exportXLSX() {
 
   // Row 2 sub-headers
   setCell('D2', 'Uang', headerStyle);
-  setCell('E2', 'Beras (kg/liter)', headerStyle);
+  setCell('E2', 'Beras (kg)', headerStyle);
   setCell('G2', 'Uang', headerStyle);
-  setCell('H2', 'Beras (kg/liter)', headerStyle);
+  setCell('H2', 'Beras (kg)', headerStyle);
   setCell('O2', 'Nama', headerStyle);
   setCell('P2', 'Alamat', headerStyle);
 
@@ -913,12 +1282,14 @@ function renderHistory() {
 
 function deleteHistory(index) {
   if (!confirm(`Hapus data ${history_data[index].nama_penyerah} (No. ${history_data[index].invno})?`)) return;
+  const invno = history_data[index].invno;
   history_data.splice(index, 1);
   localStorage.setItem('zis_history', JSON.stringify(history_data));
   updateHistoryCount();
   renderHistory();
   renderSummary();
-  showToast('🗑️ Data dihapus');
+  // Sync ke Google Sheets (background)
+  deleteFromSheets(invno).then(() => showSyncStatus('🗑️ Data dihapus dari Google Sheets', '#c9a84c'));
 }
 
 function renderSummary() {
@@ -948,76 +1319,304 @@ function renderSummary() {
   document.getElementById('sum-shdqh').textContent = formatRp(shdqh);
   document.getElementById('sum-total-uang').textContent = formatRp(totalUang);
   document.getElementById('sum-total-beras').textContent = totalBeras.toFixed(1) + ' kg beras';
-  document.getElementById('invno-current').textContent = invno_counter;
+
+  const allKeluar = [...kantong_data.k1, ...kantong_data.k2, ...kantong_data.k3];
+  const totalKeluar = allKeluar.reduce((s,d) => s+(d.jml||0), 0);
+  const saldo = totalUang - totalKeluar;
+  document.getElementById('sum-total-keluar').textContent = formatRp(totalKeluar);
+  const saldoEl = document.getElementById('sum-saldo');
+  saldoEl.textContent = formatRp(saldo);
+  saldoEl.style.color = saldo < 0 ? '#ff6b6b' : '#ffffff';
 }
 
-// =====================
-// TANDA TANGAN & CAP
-// =====================
-function loadImage(input, type) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const data = e.target.result;
-    localStorage.setItem('zis_' + type, data);
-    showImagePreview(type, data);
-    showToast('✅ Gambar tersimpan!');
-  };
-  reader.readAsDataURL(file);
-}
-
-function showImagePreview(type, data) {
-  const preview = document.getElementById(type + '-preview');
-  const placeholder = document.getElementById(type + '-placeholder');
-  const clearBtn = document.getElementById(type + '-clear');
-  preview.src = data;
-  preview.style.display = 'block';
-  placeholder.style.display = 'none';
-  clearBtn.style.display = 'block';
-}
-
-function clearImage(type) {
-  localStorage.removeItem('zis_' + type);
-  const preview = document.getElementById(type + '-preview');
-  const placeholder = document.getElementById(type + '-placeholder');
-  const clearBtn = document.getElementById(type + '-clear');
-  preview.src = '';
-  preview.style.display = 'none';
-  placeholder.style.display = 'block';
-  clearBtn.style.display = 'none';
-  showToast('🗑️ Gambar dihapus');
-}
-
-function initImages() {
-  ['ttd','cap'].forEach(type => {
-    const data = localStorage.getItem('zis_' + type);
-    if (data) showImagePreview(type, data);
-  });
-}
-
-function setInvno() {
-  const val = parseInt(document.getElementById('invno-set').value);
-  if (!val || val < 1) { showToast('⚠️ Masukkan nomor yang valid!'); return; }
-  invno_counter = val;
-  localStorage.setItem('zis_invno', invno_counter);
-  document.getElementById('invno').value = invno_counter;
-  document.getElementById('invno-current').textContent = invno_counter;
-  document.getElementById('invno-set').value = '';
-  showToast('✅ Nomor invoice diset ke ' + val);
-}
 
 function updateHistoryCount() {
   document.getElementById('history-count').textContent = history_data.length;
 }
 
 function clearAllData() {
-  if (!confirm('Yakin hapus semua data? Pastikan sudah export dulu!')) return;
+  if (!confirm('Yakin hapus semua data lokal? Data di Google Sheets tetap aman.\nUntuk sync ulang, tap "Sync dari Google Sheets".')) return;
   history_data.length = 0;
   localStorage.removeItem('zis_history');
   updateHistoryCount();
   renderSummary();
-  showToast('🗑️ Semua data dihapus');
+  showToast('🗑️ Data lokal dihapus');
+}
+
+// =====================
+// REPORT
+// =====================
+let beras_data = JSON.parse(localStorage.getItem('zis_beras') || '[]');
+
+function switchReport(type) {
+  document.getElementById('report-uang').style.display = type === 'uang' ? 'block' : 'none';
+  document.getElementById('report-beras').style.display = type === 'beras' ? 'block' : 'none';
+  document.getElementById('rtab-uang').classList.toggle('active', type === 'uang');
+  document.getElementById('rtab-beras').classList.toggle('active', type === 'beras');
+  if (type === 'uang') renderKeluar();
+  if (type === 'beras') { populateBerasTrx(); renderBeras(); }
+}
+
+function calcKeluar() {
+  const qty = parseFloat(document.getElementById('k-qty').value)||0;
+  const harga = parseFloat(document.getElementById('k-harga').value)||0;
+  document.getElementById('k-total-preview').textContent = 'Rp ' + parseInt(qty*harga).toLocaleString('id-ID');
+}
+
+function addKeluar() {
+  const kantong = document.getElementById('k-kantong').value; // 'k1', 'k2', or 'k3'
+  const tgl = document.getElementById('k-tanggal').value;
+  const ket = document.getElementById('k-ket').value.trim();
+  const qty = parseFloat(document.getElementById('k-qty').value)||0;
+  const harga = parseFloat(document.getElementById('k-harga').value)||0;
+  const jml = qty * harga;
+  if (!tgl) { showToast('⚠️ Isi tanggal!'); return; }
+  if (!ket) { showToast('⚠️ Isi item/keterangan!'); return; }
+  if (!qty || !harga) { showToast('⚠️ Isi jumlah dan harga satuan!'); return; }
+  kantong_data[kantong].push({ tgl, ket, qty, harga, jml, id: Date.now() });
+  kantong_data[kantong].sort((a,b) => a.tgl.localeCompare(b.tgl));
+  localStorage.setItem('zis_kantong', JSON.stringify(kantong_data));
+  document.getElementById('k-ket').value = '';
+  document.getElementById('k-qty').value = 1;
+  document.getElementById('k-harga').value = '';
+  document.getElementById('k-total-preview').textContent = 'Rp 0';
+  renderKeluar();
+  showToast('✅ Pengeluaran ditambahkan');
+}
+
+function deleteKeluar(kantong, id) {
+  if (!confirm('Hapus pengeluaran ini?')) return;
+  kantong_data[kantong] = kantong_data[kantong].filter(d => d.id !== id);
+  localStorage.setItem('zis_kantong', JSON.stringify(kantong_data));
+  renderKeluar();
+  showToast('🗑️ Dihapus');
+}
+
+function renderKantongCard(key, masukVal, label) {
+  const data = kantong_data[key];
+  const n = key.replace('k','');
+  const totalKeluar = data.reduce((s,d) => s+d.jml, 0);
+  const saldo = masukVal - totalKeluar;
+
+  document.getElementById('k'+n+'-masuk').textContent = formatRp(masukVal);
+  document.getElementById('k'+n+'-keluar').textContent = formatRp(totalKeluar);
+  const saldoEl = document.getElementById('k'+n+'-saldo');
+  saldoEl.textContent = formatRp(saldo);
+  saldoEl.style.color = saldo < 0 ? '#ff6b6b' : 'white';
+
+  const list = document.getElementById('k'+n+'-list');
+  const empty = document.getElementById('k'+n+'-empty');
+  if (!data.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  let saldoRun = masukVal;
+  let rows = '';
+  data.forEach(d => {
+    saldoRun -= d.jml;
+    rows += `<tr>
+      <td>${formatDate(d.tgl)}</td>
+      <td>${d.ket}</td>
+      <td class="td-num">${d.qty}</td>
+      <td class="td-num">${formatRp(d.harga)}</td>
+      <td class="td-num">${formatRp(d.jml)}</td>
+      <td class="td-kum" style="color:${saldoRun<0?'#e74c3c':'var(--green-mid)'}">${formatRp(saldoRun)}</td>
+      <td class="td-del"><button class="btn-del" onclick="deleteKeluar('${key}',${d.id})">🗑️</button></td>
+    </tr>`;
+  });
+  list.innerHTML = `<div style="overflow-x:auto;"><table class="report-table">
+    <thead><tr><th>Tgl</th><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Harga</th><th style="text-align:right">Total</th><th style="text-align:right">Saldo</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function renderKeluar() {
+  // Global summary
+  const totalMasuk = history_data.reduce((s,d) => s+(d.total_uang||0), 0);
+  const allKeluar = [...kantong_data.k1, ...kantong_data.k2, ...kantong_data.k3];
+  const totalKeluar = allKeluar.reduce((s,d) => s+d.jml, 0);
+  const saldo = totalMasuk - totalKeluar;
+  document.getElementById('r-total-masuk').textContent = formatRp(totalMasuk);
+  document.getElementById('r-total-keluar').textContent = formatRp(totalKeluar);
+  document.getElementById('r-saldo').textContent = formatRp(saldo);
+  document.getElementById('r-saldo').style.color = saldo < 0 ? '#ff6b6b' : 'white';
+
+  // Per-kantong masuk
+  const k1Masuk = history_data.reduce((s,d) => s+((d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+((d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+  const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
+  const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
+
+  renderKantongCard('k1', k1Masuk);
+  renderKantongCard('k2', k2Masuk);
+  renderKantongCard('k3', k3Masuk);
+}
+
+function populateBerasTrx() {
+  const sel = document.getElementById('b-trx');
+  if (!sel) return;
+  // Filter hanya transaksi yang punya beras
+  const usedInvnos = new Set(beras_data.map(d => d.invno));
+  const opts = history_data
+    .filter(d => ((d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)) + ((d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0)) > 0)
+    .map(d => {
+      const kg = ((d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)) + ((d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0));
+      const sudah = usedInvnos.has(d.invno) ? ' ✓' : '';
+      return `<option value="${d.invno}" data-kg="${kg}" data-tgl="${d.dt_issue}" data-nama="${d.muzakki||d.nama_penyerah}">${d.invno} — ${d.muzakki||d.nama_penyerah} (${kg.toFixed(1)} kg)${sudah}</option>`;
+    }).join('');
+  sel.innerHTML = '<option value="">— Pilih transaksi —</option>' + opts;
+}
+
+function selectBerasTrx() {
+  const sel = document.getElementById('b-trx');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) {
+    document.getElementById('b-kg').value = '';
+    return;
+  }
+  document.getElementById('b-kg').value = opt.dataset.kg;
+}
+
+function addBeras() {
+  const sel = document.getElementById('b-trx');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) { showToast('⚠️ Pilih transaksi dulu!'); return; }
+  const invno = opt.value;
+  const tgl = opt.dataset.tgl;
+  const nama = opt.dataset.nama;
+  const kg = parseFloat(opt.dataset.kg)||0;
+  const paket = parseInt(document.getElementById('b-paket').value)||0;
+  const ket = document.getElementById('b-ket').value.trim();
+  if (!paket) { showToast('⚠️ Isi jumlah paket!'); return; }
+  beras_data.push({ invno, tgl, nama, kg, paket, ket, id: Date.now() });
+  beras_data.sort((a,b) => a.tgl.localeCompare(b.tgl));
+  localStorage.setItem('zis_beras', JSON.stringify(beras_data));
+  sel.value = '';
+  document.getElementById('b-kg').value = '';
+  document.getElementById('b-paket').value = '';
+  document.getElementById('b-ket').value = '';
+  populateBerasTrx();
+  renderBeras();
+  showToast('✅ Entri beras ditambahkan');
+}
+
+function deleteBeras(id) {
+  if (!confirm('Hapus entri beras ini?')) return;
+  beras_data = beras_data.filter(d => d.id !== id);
+  localStorage.setItem('zis_beras', JSON.stringify(beras_data));
+  renderBeras();
+  showToast('🗑️ Dihapus');
+}
+
+function renderBeras() {
+  const totalKg = beras_data.reduce((s,d) => s+d.kg, 0);
+  const totalPaket = beras_data.reduce((s,d) => s+d.paket, 0);
+  const avg = totalPaket ? (totalKg/totalPaket).toFixed(2) : 0;
+  document.getElementById('r-total-kg').textContent = totalKg.toFixed(1) + ' kg';
+  document.getElementById('r-total-paket').textContent = totalPaket + ' paket';
+  document.getElementById('r-avg-paket').textContent = avg + ' kg';
+
+  const list = document.getElementById('beras-list');
+  const empty = document.getElementById('beras-empty');
+  if (!beras_data.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  let kumPaket = 0;
+  let rows = '';
+  beras_data.forEach(d => {
+    kumPaket += d.paket;
+    const kgPerPaket = (d.kg/d.paket).toFixed(2);
+    rows += `<tr>
+      <td>${formatDate(d.tgl)}</td>
+      <td>${d.nama||'-'}</td>
+      <td class="td-num">${d.kg.toFixed(1)}</td>
+      <td class="td-num">${d.paket}</td>
+      <td class="td-num">${kgPerPaket}</td>
+      <td class="td-kum">${kumPaket}</td>
+      <td class="td-del"><button class="btn-del" onclick="deleteBeras(${d.id})">🗑️</button></td>
+    </tr>`;
+  });
+
+  list.innerHTML = `<div style="overflow-x:auto;"><table class="report-table">
+    <thead><tr><th>Tanggal</th><th>Atas Nama</th><th style="text-align:right">Kg</th><th style="text-align:right">Paket</th><th style="text-align:right">Kg/Paket</th><th style="text-align:right">Kum. Paket</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function exportKeluarXLSX() {
+  const totalMasuk = history_data.reduce((s,d) => s+(d.total_uang||0), 0);
+  const k1Masuk = history_data.reduce((s,d) => s+((d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+((d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+  const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
+  const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
+  const allKeluar = [...kantong_data.k1, ...kantong_data.k2, ...kantong_data.k3];
+  const totalKeluar = allKeluar.reduce((s,d) => s+d.jml, 0);
+
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Ringkasan Global
+  const wsRingkasan = XLSX.utils.aoa_to_sheet([
+    ['LAPORAN PENGGUNAAN UANG ZIS - MASJID AL-MUTHMAINNAH 1447 H'],
+    [],
+    ['Kantong', 'Total Masuk (Rp)', 'Total Keluar (Rp)', 'Saldo (Rp)'],
+    ['Fitrah + Fidyah', k1Masuk, kantong_data.k1.reduce((s,d)=>s+d.jml,0), k1Masuk - kantong_data.k1.reduce((s,d)=>s+d.jml,0)],
+    ['Zakat Maal', k2Masuk, kantong_data.k2.reduce((s,d)=>s+d.jml,0), k2Masuk - kantong_data.k2.reduce((s,d)=>s+d.jml,0)],
+    ['Infaq + Shadaqah', k3Masuk, kantong_data.k3.reduce((s,d)=>s+d.jml,0), k3Masuk - kantong_data.k3.reduce((s,d)=>s+d.jml,0)],
+    [],
+    ['TOTAL', totalMasuk, totalKeluar, totalMasuk - totalKeluar],
+  ]);
+  wsRingkasan['!cols'] = [{wch:20},{wch:18},{wch:18},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsRingkasan, 'Ringkasan');
+
+  // Helper: build sheet per kantong
+  function buildSheet(data, masuk, label) {
+    const rows = [
+      [label],
+      [],
+      ['Total Masuk', masuk],
+      [],
+      ['Tanggal', 'Item / Keterangan', 'Qty', 'Harga Satuan (Rp)', 'Total (Rp)', 'Saldo (Rp)'],
+    ];
+    let saldo = masuk;
+    data.forEach(d => {
+      saldo -= d.jml;
+      rows.push([d.tgl, d.ket, d.qty, d.harga, d.jml, saldo]);
+    });
+    rows.push([]);
+    rows.push(['', 'TOTAL KELUAR', '', '', data.reduce((s,d)=>s+d.jml,0), saldo]);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:14},{wch:35},{wch:8},{wch:18},{wch:16},{wch:16}];
+    return ws;
+  }
+
+  XLSX.utils.book_append_sheet(wb, buildSheet(kantong_data.k1, k1Masuk, 'Fitrah + Fidyah'), 'Fitrah+Fidyah');
+  XLSX.utils.book_append_sheet(wb, buildSheet(kantong_data.k2, k2Masuk, 'Zakat Maal'), 'Zakat Maal');
+  XLSX.utils.book_append_sheet(wb, buildSheet(kantong_data.k3, k3Masuk, 'Infaq + Shadaqah'), 'Infaq+Shadaqah');
+
+  XLSX.writeFile(wb, 'Laporan_Keuangan_ZIS_1447H.xlsx');
+  showToast('📊 Laporan keuangan didownload!');
+}
+
+function exportBerasXLSX() {
+  const wb = XLSX.utils.book_new();
+  const wsData = [
+    ['LAPORAN KONVERSI BERAS ZIS - MASJID AL-MUTHMAINNAH 1447 H'],
+    [],
+    ['Tanggal', 'Beras (kg)', 'Jumlah Paket', 'Kg/Paket', 'Kumulatif Paket', 'Keterangan'],
+  ];
+  let kumPaket = 0;
+  beras_data.forEach(d => {
+    kumPaket += d.paket;
+    wsData.push([d.tgl, d.kg, d.paket, (d.kg/d.paket).toFixed(2), kumPaket, d.ket||'']);
+  });
+  wsData.push([]);
+  wsData.push(['TOTAL',
+    beras_data.reduce((s,d)=>s+d.kg,0),
+    beras_data.reduce((s,d)=>s+d.paket,0),
+    '', kumPaket, ''
+  ]);
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:14},{wch:12},{wch:14},{wch:12},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Konversi Beras');
+  XLSX.writeFile(wb, 'Laporan_Beras_ZIS_1447H.xlsx');
+  showToast('📊 Laporan beras didownload!');
 }
 
 function showToast(msg) {
@@ -1028,6 +1627,37 @@ function showToast(msg) {
 }
 
 calcTotal();
+document.getElementById('k-tanggal').value = new Date().toISOString().split('T')[0];
+
+function uploadImg(type) {
+  const inp = document.getElementById('inp-' + type);
+  const file = inp.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result;
+    localStorage.setItem('zis_' + type, b64);
+    const img = document.getElementById('img-' + type);
+    const lbl = document.getElementById('lbl-' + type);
+    img.src = b64;
+    img.style.display = 'block';
+    lbl.style.display = 'none';
+    showToast('✅ ' + (type === 'ttd' ? 'Tanda tangan' : 'Cap') + ' tersimpan');
+  };
+  reader.readAsDataURL(file);
+}
+
+function initImages() {
+  ['ttd', 'cap'].forEach(type => {
+    const b64 = localStorage.getItem('zis_' + type);
+    if (b64) {
+      const img = document.getElementById('img-' + type);
+      const lbl = document.getElementById('lbl-' + type);
+      if (img) { img.src = b64; img.style.display = 'block'; }
+      if (lbl) lbl.style.display = 'none';
+    }
+  });
+}
 initImages();
 </script>
 </body>
