@@ -859,6 +859,7 @@ function switchTab(tab) {
   if (tab === 'history') renderHistory();
   if (tab === 'export') renderSummary();
   if (tab === 'report') { renderKeluar(); switchReport('uang'); }
+  if (tab === 'form') document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
 }
 
 function formatRp(n) { return 'Rp ' + parseInt(n||0).toLocaleString('id-ID'); }
@@ -1265,7 +1266,8 @@ function renderHistory() {
   const empty = document.getElementById('history-empty');
   if (!history_data.length) { list.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-  list.innerHTML = history_data.map((d, i)=>`
+  const sorted = [...history_data].sort((a,b) => parseInt(b.invno) - parseInt(a.invno));
+  list.innerHTML = sorted.map(d=>`
     <div class="history-item">
       <div style="flex:1">
         <div class="history-no">No. ${d.invno}</div>
@@ -1276,19 +1278,19 @@ function renderHistory() {
         <div class="history-amount">${formatRp(d.total_uang)}</div>
         <div class="history-beras">${parseFloat(d.total_beras||0).toFixed(1)} kg beras</div>
       </div>
-      <button class="btn-delete" onclick="deleteHistory(${i})" title="Hapus">🗑️</button>
+      <button class="btn-delete" onclick="deleteHistory('${d.invno}')" title="Hapus">🗑️</button>
     </div>`).join('');
 }
 
-function deleteHistory(index) {
-  if (!confirm(`Hapus data ${history_data[index].nama_penyerah} (No. ${history_data[index].invno})?`)) return;
-  const invno = history_data[index].invno;
-  history_data.splice(index, 1);
+function deleteHistory(invno) {
+  const idx = history_data.findIndex(d => String(d.invno) === String(invno));
+  if (idx === -1) return;
+  if (!confirm(`Hapus data ${history_data[idx].nama_penyerah} (No. ${invno})?`)) return;
+  history_data.splice(idx, 1);
   localStorage.setItem('zis_history', JSON.stringify(history_data));
   updateHistoryCount();
   renderHistory();
   renderSummary();
-  // Sync ke Google Sheets (background)
   deleteFromSheets(invno).then(() => showSyncStatus('🗑️ Data dihapus dari Google Sheets', '#c9a84c'));
 }
 
