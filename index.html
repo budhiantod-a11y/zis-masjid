@@ -685,7 +685,7 @@ let currentData = null;
 let isSyncing = false;
 
 document.getElementById('invno').value = invno_counter;
-document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
+document.getElementById('dt_issue').value = todayLocal();
 updateHistoryCount();
 
 // Sync dari Google Sheets saat app dibuka
@@ -729,6 +729,7 @@ async function syncFromSheets() {
 
     // Parse data dari sheet (skip header row)
     const rows = json.data.slice(1).filter(r => r[0]); // skip header, skip empty
+    if (rows.length > 0) console.log('[ZIS Debug] kolom B raw:', rows[0][1], typeof rows[0][1]);
     const parsed = rows.map(r => ({
       invno: String(r[0]),
       dt_issue: r[1] ? parseSheetDate(r[1]) : '',
@@ -768,7 +769,7 @@ async function syncFromSheets() {
     }
 
     updateHistoryCount();
-    document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
+    document.getElementById('dt_issue').value = todayLocal();
     showSyncStatus('✅ Data tersinkronisasi (' + parsed.length + ' data)', '#2d6a4f');
   } catch(err) {
     showSyncStatus('⚠️ Gagal sync — pakai data lokal', '#c9a84c');
@@ -860,27 +861,48 @@ function switchTab(tab) {
   if (tab === 'history') renderHistory();
   if (tab === 'export') renderSummary();
   if (tab === 'report') { renderKeluar(); switchReport('uang'); }
-  if (tab === 'form') document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
+  if (tab === 'form') document.getElementById('dt_issue').value = todayLocal();
+}
+
+function todayLocal() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
 
 function formatRp(n) { return 'Rp ' + parseInt(n||0).toLocaleString('id-ID'); }
 
 function parseSheetDate(val) {
   if (!val) return '';
+
+  // Google Sheets serial number (e.g. 46460) — days since 1899-12-30
+  if (typeof val === 'number' || /^\d{5}$/.test(String(val).trim())) {
+    const serial = parseInt(val);
+    if (serial > 1000) {
+      const epoch = new Date(1899, 11, 30);
+      epoch.setDate(epoch.getDate() + serial);
+      return epoch.toISOString().split('T')[0];
+    }
+  }
+
   const s = String(val).trim();
   // ISO format: 2026-03-13 or 2026-03-13T00:00:00.000Z
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.split('T')[0];
-  // US format: 3/13/2026 or 03/13/2026
+  // M/D/YYYY or MM/DD/YYYY (Google Sheets US locale)
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
-    const [m, d, y] = s.split('/');
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+    const parts = s.split('/');
+    // Detect ID locale (DD/MM/YYYY) vs US (M/D/YYYY) — if first part > 12 it must be day
+    const first = parseInt(parts[0]);
+    const second = parseInt(parts[1]);
+    let d, m, y;
+    if (first > 12) { [d, m, y] = parts; }       // DD/MM/YYYY
+    else if (second > 12) { [m, d, y] = parts; }  // MM/DD/YYYY
+    else { [m, d, y] = parts; }                   // default US M/D/YYYY
+    return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
-  // DD/MM/YYYY (common in ID locale)
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
-    const [d, m, y] = s.split('/');
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-  }
-  // Fallback: try native Date parse
+  // Fallback: native Date parse
   const dt = new Date(s);
   if (!isNaN(dt)) return dt.toISOString().split('T')[0];
   return s;
@@ -1093,7 +1115,7 @@ function clearForm() {
    'fidyah_jiwa_uang','fidyah_uang','fidyah_jiwa_beras','fidyah_beras',
    'maal','infaq','shdqh'].forEach(id => document.getElementById(id).value = 0);
   calcTotal();
-  document.getElementById('dt_issue').value = new Date().toISOString().split('T')[0];
+  document.getElementById('dt_issue').value = todayLocal();
   currentData = null;
 }
 
@@ -1651,7 +1673,7 @@ function showToast(msg) {
 }
 
 calcTotal();
-document.getElementById('k-tanggal').value = new Date().toISOString().split('T')[0];
+document.getElementById('k-tanggal').value = todayLocal();
 
 function uploadImg(type) {
   const inp = document.getElementById('inp-' + type);
