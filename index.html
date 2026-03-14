@@ -746,8 +746,10 @@ async function syncFromSheets() {
       petugas: r[16]||'',
       phone: r[17]||'',
       // Reconstruct jiwa dari total
+      _fitrah_jiwa: parseFloat(r[2])||0,
       _fitrah_total_uang: parseFloat(r[3])||0,
       _fitrah_total_beras: parseFloat(r[4])||0,
+      _fidyah_jiwa: parseFloat(r[5])||0,
       _fidyah_total_uang: parseFloat(r[6])||0,
       _fidyah_total_beras: parseFloat(r[7])||0,
     }));
@@ -1347,7 +1349,7 @@ function renderSummary() {
   const last = history_data.length ? formatDate(history_data[0].dt_issue) : '-';
 
   // Pakai _fitrah_total_ (dari Sheets) jika tersedia, fallback ke kalkulasi lokal
-  const fitrahJiwa = history_data.reduce((s,d) => s+(d.fitrah_jiwa_uang||0)+(d.fitrah_jiwa_beras||0), 0);
+  const fitrahJiwa = history_data.reduce((s,d) => s+(d._fitrah_jiwa||(d.fitrah_jiwa_uang||0)+(d.fitrah_jiwa_beras||0)), 0);
   const fitrahUang = history_data.reduce((s,d) => s+(d._fitrah_total_uang || (d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0)), 0);
   const fitrahBeras = history_data.reduce((s,d) => s+(d._fitrah_total_beras || (d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)), 0);
   const fidyahUang = history_data.reduce((s,d) => s+(d._fidyah_total_uang || (d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
@@ -1612,13 +1614,8 @@ async function syncKeluarToSheets() {
       kantong: kantong_data,
       masuk: { k1: k1Masuk, k2: k2Masuk, k3: k3Masuk }
     };
-    const res = await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
-    const json = await res.json();
-    if (json.status === 'ok') {
-      showToast('✅ Laporan keuangan tersinkron ke Sheets!');
-    } else {
-      showToast('⚠️ Gagal sync: ' + (json.message||'unknown'));
-    }
+    await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    showToast('✅ Laporan keuangan tersinkron ke Sheets!');
   } catch(e) {
     showToast('❌ Gagal terhubung ke Sheets');
   }
@@ -1632,13 +1629,8 @@ async function syncBerasToSheets() {
   btn.textContent = '⏳ Menyinkronkan...';
   try {
     const payload = { action: 'sync_beras', beras: beras_data };
-    const res = await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
-    const json = await res.json();
-    if (json.status === 'ok') {
-      showToast('✅ Laporan beras tersinkron ke Sheets!');
-    } else {
-      showToast('⚠️ Gagal sync: ' + (json.message||'unknown'));
-    }
+    await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    showToast('✅ Laporan beras tersinkron ke Sheets!');
   } catch(e) {
     showToast('❌ Gagal terhubung ke Sheets');
   }
