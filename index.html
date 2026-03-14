@@ -579,19 +579,20 @@
     <!-- Summary -->
     <div style="background:linear-gradient(135deg,var(--green-dark),var(--green-mid));border-radius:16px;padding:16px;margin-bottom:12px;color:white;">
       <div style="font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Ringkasan Beras</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
-          <div style="font-size:10px;opacity:0.7;">Total Beras</div>
+          <div style="font-size:10px;opacity:0.7;">Total Beras Masuk</div>
           <div style="font-size:13px;font-weight:700;" id="r-total-kg">0 kg</div>
         </div>
         <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
           <div style="font-size:10px;opacity:0.7;">Total Paket</div>
           <div style="font-size:13px;font-weight:700;" id="r-total-paket">0 paket</div>
         </div>
-        <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;">
-          <div style="font-size:10px;opacity:0.7;">Rata-rata/Paket</div>
-          <div style="font-size:13px;font-weight:700;" id="r-avg-paket">0 kg</div>
-        </div>
+      </div>
+      <div style="background:rgba(255,165,0,0.25);border-radius:10px;padding:10px;">
+        <div style="font-size:10px;opacity:0.85;">⏳ Belum Dikonversi</div>
+        <div style="font-size:13px;font-weight:700;" id="r-belum-konversi">0 transaksi</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:3px;" id="r-belum-list">—</div>
       </div>
     </div>
 
@@ -1504,12 +1505,13 @@ function renderKeluar() {
 function populateBerasTrx() {
   const sel = document.getElementById('b-trx');
   if (!sel) return;
-  // Filter hanya transaksi yang punya beras
   const usedInvnos = new Set(beras_data.map(d => d.invno));
+  // Pakai total_beras karena jiwa*kg tidak tersimpan dari Sheets
   const opts = history_data
-    .filter(d => ((d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)) + ((d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0)) > 0)
+    .filter(d => (parseFloat(d.total_beras)||0) > 0)
+    .sort((a,b) => parseInt(b.invno) - parseInt(a.invno))
     .map(d => {
-      const kg = ((d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)) + ((d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0));
+      const kg = parseFloat(d.total_beras)||0;
       const sudah = usedInvnos.has(d.invno) ? ' ✓' : '';
       return `<option value="${d.invno}" data-kg="${kg}" data-tgl="${d.dt_issue}" data-nama="${d.muzakki||d.nama_penyerah}">${d.invno} — ${d.muzakki||d.nama_penyerah} (${kg.toFixed(1)} kg)${sudah}</option>`;
     }).join('');
@@ -1560,10 +1562,16 @@ function deleteBeras(id) {
 function renderBeras() {
   const totalKg = beras_data.reduce((s,d) => s+d.kg, 0);
   const totalPaket = beras_data.reduce((s,d) => s+d.paket, 0);
-  const avg = totalPaket ? (totalKg/totalPaket).toFixed(2) : 0;
   document.getElementById('r-total-kg').textContent = totalKg.toFixed(1) + ' kg';
   document.getElementById('r-total-paket').textContent = totalPaket + ' paket';
-  document.getElementById('r-avg-paket').textContent = avg + ' kg';
+
+  // Hitung transaksi yg punya beras tapi belum dikonversi
+  const usedInvnos = new Set(beras_data.map(d => d.invno));
+  const belum = history_data.filter(d => (parseFloat(d.total_beras)||0) > 0 && !usedInvnos.has(d.invno));
+  document.getElementById('r-belum-konversi').textContent = belum.length + ' transaksi';
+  document.getElementById('r-belum-list').textContent = belum.length
+    ? belum.map(d => `No.${d.invno} ${d.muzakki||d.nama_penyerah} (${parseFloat(d.total_beras).toFixed(1)} kg)`).join(' · ')
+    : '✅ Semua sudah dikonversi';
 
   const list = document.getElementById('beras-list');
   const empty = document.getElementById('beras-empty');
