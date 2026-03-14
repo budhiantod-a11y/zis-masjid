@@ -383,46 +383,29 @@
   <div class="card">
     <div class="card-title">🖊️ Tanda Tangan & Cap</div>
     <p style="font-size:13px;color:var(--text-soft);margin-bottom:12px;line-height:1.6;">
-      Upload tanda tangan dan cap/stempel untuk disisipkan otomatis ke PDF.
+      Upload gambar tanda tangan + cap (sudah digabung jadi satu) untuk disisipkan otomatis ke PDF.
     </p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-      <div>
-        <div style="font-size:11px;font-weight:600;color:var(--text-soft);margin-bottom:6px;">CAP / STEMPEL (kiri)</div>
-        <div style="border:2px dashed var(--border);border-radius:10px;padding:8px;text-align:center;min-height:70px;display:flex;align-items:center;justify-content:center;background:#fafafa;">
-          <img id="img-cap" src="" style="max-height:60px;max-width:100%;display:none;">
-          <span id="lbl-cap" style="font-size:11px;color:var(--text-soft);">Belum diupload</span>
-        </div>
-        <input type="file" id="inp-cap" accept="image/*" style="display:none" onchange="uploadImg('cap')">
-        <button class="btn btn-primary" style="margin-top:6px;padding:8px;font-size:12px;" onclick="document.getElementById('inp-cap').click()">Upload Cap</button>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:var(--text-soft);margin-bottom:6px;">TANDA TANGAN (kanan)</div>
-        <div style="border:2px dashed var(--border);border-radius:10px;padding:8px;text-align:center;min-height:70px;display:flex;align-items:center;justify-content:center;background:#fafafa;">
-          <img id="img-ttd" src="" style="max-height:60px;max-width:100%;display:none;">
-          <span id="lbl-ttd" style="font-size:11px;color:var(--text-soft);">Belum diupload</span>
-        </div>
-        <input type="file" id="inp-ttd" accept="image/*" style="display:none" onchange="uploadImg('ttd')">
-        <button class="btn btn-primary" style="margin-top:6px;padding:8px;font-size:12px;" onclick="document.getElementById('inp-ttd').click()">Upload TTD</button>
-      </div>
+    <div style="border:2px dashed var(--border);border-radius:10px;padding:12px;text-align:center;min-height:80px;display:flex;align-items:center;justify-content:center;background:#fafafa;margin-bottom:10px;">
+      <img id="img-ttd" src="" style="max-height:70px;max-width:100%;display:none;">
+      <span id="lbl-ttd" style="font-size:12px;color:var(--text-soft);">Belum diupload</span>
     </div>
+    <input type="file" id="inp-ttd" accept="image/*" style="display:none" onchange="uploadImg('ttd')">
+    <button class="btn btn-primary" style="padding:10px;font-size:13px;" onclick="document.getElementById('inp-ttd').click()">Upload TTD + Cap</button>
 
     <!-- Preview posisi di PDF -->
-    <div style="font-size:11px;font-weight:600;color:var(--text-soft);margin-bottom:6px;">PREVIEW POSISI DI PDF</div>
-    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;position:relative;">
+    <div style="font-size:11px;font-weight:600;color:var(--text-soft);margin:12px 0 6px;">PREVIEW POSISI DI PDF</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;">
       <div style="font-size:10px;color:var(--text-soft);margin-bottom:8px;text-align:center;">— area footer bukti —</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;">
         <div style="text-align:center;">
-          <div style="min-height:50px;border:1px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fafafa;margin-bottom:4px;">
-            <img id="prev-cap" src="" style="max-height:46px;max-width:100%;display:none;">
-            <span id="prev-cap-lbl" style="font-size:10px;color:#ccc;">cap</span>
-          </div>
+          <div style="min-height:50px;margin-bottom:4px;"></div>
           <div style="font-size:10px;color:var(--text-soft);">Yang Menyerahkan,</div>
           <div style="font-size:11px;font-weight:700;margin-top:2px;">Nama Penyerah</div>
         </div>
         <div style="text-align:center;">
-          <div style="min-height:50px;border:1px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fafafa;margin-bottom:4px;">
-            <img id="prev-ttd" src="" style="max-height:46px;max-width:100%;display:none;">
-            <span id="prev-ttd-lbl" style="font-size:10px;color:#ccc;">ttd</span>
+          <div style="min-height:60px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:4px;">
+            <img id="prev-ttd" src="" style="max-height:55px;max-width:100%;display:none;">
+            <span id="prev-ttd-lbl" style="font-size:10px;color:#ccc;">ttd + cap</span>
           </div>
           <div style="font-size:10px;color:var(--text-soft);">Yang Menerima,</div>
           <div style="font-size:11px;font-weight:700;margin-top:2px;">Nama Petugas</div>
@@ -1184,10 +1167,8 @@ function downloadPDF() {
   }
 
   const ttd = localStorage.getItem('zis_ttd');
-  const cap = localStorage.getItem('zis_cap');
-  // TTD di kanan atas nama petugas, cap di kiri atas nama penyerah
-  if (ttd) addImgWithWhiteBg(ttd, W - margin - 30, y - 14, 30, 14);
-  if (cap) addImgWithWhiteBg(cap, margin, y - 14, 30, 14);
+  // TTD+Cap di area "Yang Menerima" (kanan)
+  if (ttd) addImgWithWhiteBg(ttd, W - margin - 34, y - 16, 34, 16);
 
   doc.save(d.invno+'-'+d.nama_penyerah+' '+d.alamat_penyerah+'.pdf');
   showToast('📄 PDF didownload!');
@@ -1729,10 +1710,10 @@ calcTotal();
 document.getElementById('k-tanggal').value = todayLocal();
 
 function setImgPreview(type, b64) {
-  const img = document.getElementById('img-' + type);
-  const lbl = document.getElementById('lbl-' + type);
-  const prev = document.getElementById('prev-' + type);
-  const prevLbl = document.getElementById('prev-' + type + '-lbl');
+  const img = document.getElementById('img-ttd');
+  const lbl = document.getElementById('lbl-ttd');
+  const prev = document.getElementById('prev-ttd');
+  const prevLbl = document.getElementById('prev-ttd-lbl');
   if (img) { img.src = b64; img.style.display = 'block'; }
   if (lbl) lbl.style.display = 'none';
   if (prev) { prev.src = b64; prev.style.display = 'block'; }
@@ -1740,24 +1721,22 @@ function setImgPreview(type, b64) {
 }
 
 function uploadImg(type) {
-  const inp = document.getElementById('inp-' + type);
+  const inp = document.getElementById('inp-ttd');
   const file = inp.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     const b64 = e.target.result;
-    localStorage.setItem('zis_' + type, b64);
-    setImgPreview(type, b64);
-    showToast('✅ ' + (type === 'ttd' ? 'Tanda tangan' : 'Cap') + ' tersimpan');
+    localStorage.setItem('zis_ttd', b64);
+    setImgPreview('ttd', b64);
+    showToast('✅ TTD + Cap tersimpan');
   };
   reader.readAsDataURL(file);
 }
 
 function initImages() {
-  ['ttd', 'cap'].forEach(type => {
-    const b64 = localStorage.getItem('zis_' + type);
-    if (b64) setImgPreview(type, b64);
-  });
+  const b64 = localStorage.getItem('zis_ttd');
+  if (b64) setImgPreview('ttd', b64);
 }
 initImages();
 </script>
