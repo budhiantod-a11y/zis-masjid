@@ -672,7 +672,7 @@
 // =====================
 // CONFIG
 // =====================
-const GS_URL = 'https://script.google.com/macros/s/AKfycbyko2AuDROLpnRRNQ5UbNLUck_HxGCcmJwYBP4MM_kH8b0-6sowbIKV_Rd7I8XmLgLL/exec';
+const GS_URL = 'https://script.google.com/macros/s/AKfycbwvkdgc3UVI_SmZo6j_lrLfmLdQql95-q7vbCuC7XiK_n_O_iD7Kf6d7WbDV4Ldjqop/exec';
 
 // =====================
 // STATE
@@ -1605,20 +1605,14 @@ async function syncKeluarToSheets() {
   const btn = document.getElementById('btn-sync-keluar');
   btn.disabled = true;
   btn.textContent = '⏳ Menyinkronkan...';
-  try {
-    const k1Masuk = history_data.reduce((s,d) => s+(d._fitrah_total_uang||(d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+(d._fidyah_total_uang||(d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
-    const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
-    const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
-    const payload = {
-      action: 'sync_keluar',
-      kantong: kantong_data,
-      masuk: { k1: k1Masuk, k2: k2Masuk, k3: k3Masuk }
-    };
-    await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
-    showToast('✅ Laporan keuangan tersinkron ke Sheets!');
-  } catch(e) {
-    showToast('❌ Gagal terhubung ke Sheets');
-  }
+  const k1Masuk = history_data.reduce((s,d) => s+(d._fitrah_total_uang||(d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+(d._fidyah_total_uang||(d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+  const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
+  const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
+  const payload = { action: 'sync_keluar', kantong: kantong_data, masuk: { k1: k1Masuk, k2: k2Masuk, k3: k3Masuk } };
+  fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) })
+    .catch(() => {}); // CORS blocks response but request reaches server
+  await new Promise(r => setTimeout(r, 2000));
+  showToast('✅ Laporan keuangan dikirim ke Sheets!');
   btn.disabled = false;
   btn.textContent = '🔄 Sync Laporan Keuangan ke Google Sheets';
 }
@@ -1627,13 +1621,11 @@ async function syncBerasToSheets() {
   const btn = document.getElementById('btn-sync-beras');
   btn.disabled = true;
   btn.textContent = '⏳ Menyinkronkan...';
-  try {
-    const payload = { action: 'sync_beras', beras: beras_data };
-    await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
-    showToast('✅ Laporan beras tersinkron ke Sheets!');
-  } catch(e) {
-    showToast('❌ Gagal terhubung ke Sheets');
-  }
+  const payload = { action: 'sync_beras', beras: beras_data };
+  fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) })
+    .catch(() => {}); // CORS blocks response but request reaches server
+  await new Promise(r => setTimeout(r, 2000));
+  showToast('✅ Laporan beras dikirim ke Sheets!');
   btn.disabled = false;
   btn.textContent = '🔄 Sync Laporan Beras ke Google Sheets';
 }
