@@ -768,7 +768,7 @@ async function syncFromSheets() {
       const jsonBeras = await resBeras.json();
       if (jsonBeras.status === 'ok') {
         beras_data = (jsonBeras.data||[]).map((d, i) => ({
-          id: d.id || (Date.now() + i), invno: d.invno, tgl: d.tgl, nama: d.nama,
+          id: d.id || (Date.now() + i), invno: d.invno, tgl: parseSheetDate(d.tgl), nama: d.nama,
           kg: parseFloat(d.kg)||0, paket: parseInt(d.paket)||0, ket: d.ket||''
         }));
         localStorage.setItem('zis_beras', JSON.stringify(beras_data));
@@ -783,7 +783,7 @@ async function syncFromSheets() {
         const k = jsonKantong.data || {k1:[],k2:[],k3:[]};
         const mapK = (arr, i0) => (arr||[]).map((d,i) => ({
           id: d.id || (Date.now() + i0 + i),
-          tgl: d.tgl, ket: d.ket,
+          tgl: parseSheetDate(d.tgl), ket: d.ket,
           qty: parseFloat(d.qty)||0, harga: parseFloat(d.harga)||0, jml: parseFloat(d.jml)||0
         }));
         kantong_data = { k1: mapK(k.k1, 0), k2: mapK(k.k2, 100), k3: mapK(k.k3, 200) };
