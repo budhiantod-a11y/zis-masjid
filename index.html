@@ -716,18 +716,14 @@ async function syncFromSheets() {
     const res = await fetch(GS_URL);
     const json = await res.json();
     if (json.status !== 'ok' || !json.data || json.data.length < 2) {
-      // Sheet kosong atau hanya header — inisialisasi header
-      await fetch(GS_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'init_headers' })
-      });
+      await fetch(GS_URL, { method: 'POST', body: JSON.stringify({ action: 'init_headers' }) });
       isSyncing = false;
       showSyncStatus('✅ Sheet siap', '#2d6a4f');
       return;
     }
 
-    // Parse data dari sheet (skip header row)
-    const rows = json.data.slice(1).filter(r => r[0]); // skip header, skip empty
+    // Parse data penerimaan
+    const rows = json.data.slice(1).filter(r => r[0]);
     const parsed = rows.map(r => ({
       invno: String(r[0]),
       dt_issue: r[1] ? parseSheetDate(r[1]) : '',
@@ -745,7 +741,6 @@ async function syncFromSheets() {
       alamat_penyerah: r[15]||'',
       petugas: r[16]||'',
       phone: r[17]||'',
-      // Reconstruct jiwa dari total
       _fitrah_jiwa: parseFloat(r[2])||0,
       _fitrah_total_uang: parseFloat(r[3])||0,
       _fitrah_total_beras: parseFloat(r[4])||0,
@@ -753,12 +748,9 @@ async function syncFromSheets() {
       _fidyah_total_uang: parseFloat(r[6])||0,
       _fidyah_total_beras: parseFloat(r[7])||0,
     }));
-
-    // Update history dan invno dari sheet
     history_data = parsed;
     localStorage.setItem('zis_history', JSON.stringify(history_data));
 
-    // Set invno_counter ke nomor terakhir + 1
     if (parsed.length > 0) {
       const maxInvno = Math.max(...parsed.map(d => parseInt(d.invno)||0));
       if (maxInvno >= invno_counter) {
@@ -768,6 +760,36 @@ async function syncFromSheets() {
       }
     }
 
+    // Pull data beras
+    try {
+      const resBeras = await fetch(GS_URL + '?type=beras');
+      const jsonBeras = await resBeras.json();
+      if (jsonBeras.status === 'ok' && jsonBeras.data && jsonBeras.data.length > 0) {
+        beras_data = jsonBeras.data.map(d => ({
+          id: d.id, invno: d.invno, tgl: d.tgl, nama: d.nama,
+          kg: parseFloat(d.kg)||0, paket: parseInt(d.paket)||0, ket: d.ket||''
+        }));
+        localStorage.setItem('zis_beras', JSON.stringify(beras_data));
+      }
+    } catch(e) {}
+
+    // Pull data kantong
+    try {
+      const resKantong = await fetch(GS_URL + '?type=kantong');
+      const jsonKantong = await resKantong.json();
+      if (jsonKantong.status === 'ok' && jsonKantong.data) {
+        const k = jsonKantong.data;
+        if ((k.k1||[]).length + (k.k2||[]).length + (k.k3||[]).length > 0) {
+          kantong_data = {
+            k1: (k.k1||[]).map(d => ({id:d.id,tgl:d.tgl,ket:d.ket,qty:parseFloat(d.qty)||0,harga:parseFloat(d.harga)||0,jml:parseFloat(d.jml)||0})),
+            k2: (k.k2||[]).map(d => ({id:d.id,tgl:d.tgl,ket:d.ket,qty:parseFloat(d.qty)||0,harga:parseFloat(d.harga)||0,jml:parseFloat(d.jml)||0})),
+            k3: (k.k3||[]).map(d => ({id:d.id,tgl:d.tgl,ket:d.ket,qty:parseFloat(d.qty)||0,harga:parseFloat(d.harga)||0,jml:parseFloat(d.jml)||0})),
+          };
+          localStorage.setItem('zis_kantong', JSON.stringify(kantong_data));
+        }
+      }
+    } catch(e) {}
+
     updateHistoryCount();
     document.getElementById('dt_issue').value = todayLocal();
     showSyncStatus('✅ Data tersinkronisasi (' + parsed.length + ' data)', '#2d6a4f');
@@ -775,6 +797,21 @@ async function syncFromSheets() {
     showSyncStatus('⚠️ Gagal sync — pakai data lokal', '#c9a84c');
   }
   isSyncing = false;
+}
+
+
+function pushBerasToSheets() {
+  fetch(GS_URL, { method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'save_beras', beras: beras_data })
+  }).catch(()=>{});
+}
+
+function pushKantongToSheets() {
+  fetch(GS_URL, { method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'save_kantong', kantong: kantong_data })
+  }).catch(()=>{});
 }
 
 async function saveToSheets(d) {
@@ -1429,6 +1466,7 @@ function addKeluar() {
   kantong_data[kantong].push({ tgl, ket, qty, harga, jml, id: Date.now() });
   kantong_data[kantong].sort((a,b) => a.tgl.localeCompare(b.tgl));
   localStorage.setItem('zis_kantong', JSON.stringify(kantong_data));
+  pushKantongToSheets();
   document.getElementById('k-ket').value = '';
   document.getElementById('k-qty').value = 1;
   document.getElementById('k-harga').value = '';
@@ -1441,6 +1479,7 @@ function deleteKeluar(kantong, id) {
   if (!confirm('Hapus pengeluaran ini?')) return;
   kantong_data[kantong] = kantong_data[kantong].filter(d => d.id !== id);
   localStorage.setItem('zis_kantong', JSON.stringify(kantong_data));
+  pushKantongToSheets();
   renderKeluar();
   showToast('🗑️ Dihapus');
 }
@@ -1543,6 +1582,7 @@ function addBeras() {
   beras_data.push({ invno, tgl, nama, kg, paket, ket, id: Date.now() });
   beras_data.sort((a,b) => a.tgl.localeCompare(b.tgl));
   localStorage.setItem('zis_beras', JSON.stringify(beras_data));
+  pushBerasToSheets();
   sel.value = '';
   document.getElementById('b-kg').value = '';
   document.getElementById('b-paket').value = '';
@@ -1556,6 +1596,7 @@ function deleteBeras(id) {
   if (!confirm('Hapus entri beras ini?')) return;
   beras_data = beras_data.filter(d => d.id !== id);
   localStorage.setItem('zis_beras', JSON.stringify(beras_data));
+  pushBerasToSheets();
   renderBeras();
   showToast('🗑️ Dihapus');
 }
@@ -1609,10 +1650,17 @@ async function syncKeluarToSheets() {
   const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
   const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
   const payload = { action: 'sync_keluar', kantong: kantong_data, masuk: { k1: k1Masuk, k2: k2Masuk, k3: k3Masuk } };
-  fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) })
-    .catch(() => {}); // CORS blocks response but request reaches server
-  await new Promise(r => setTimeout(r, 2000));
-  showToast('✅ Laporan keuangan dikirim ke Sheets!');
+  try {
+    await fetch(GS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    showToast('✅ Laporan keuangan dikirim ke Sheets!');
+  } catch(e) {
+    showToast('❌ Gagal: ' + e.message);
+  }
   btn.disabled = false;
   btn.textContent = '🔄 Sync Laporan Keuangan ke Google Sheets';
 }
@@ -1622,10 +1670,17 @@ async function syncBerasToSheets() {
   btn.disabled = true;
   btn.textContent = '⏳ Menyinkronkan...';
   const payload = { action: 'sync_beras', beras: beras_data };
-  fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) })
-    .catch(() => {}); // CORS blocks response but request reaches server
-  await new Promise(r => setTimeout(r, 2000));
-  showToast('✅ Laporan beras dikirim ke Sheets!');
+  try {
+    await fetch(GS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    showToast('✅ Laporan beras dikirim ke Sheets!');
+  } catch(e) {
+    showToast('❌ Gagal: ' + e.message);
+  }
   btn.disabled = false;
   btn.textContent = '🔄 Sync Laporan Beras ke Google Sheets';
 }
