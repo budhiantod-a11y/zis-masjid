@@ -689,6 +689,8 @@ updateHistoryCount();
 
 // Sync dari Google Sheets saat app dibuka
 syncFromSheets();
+// Auto-sync setiap 2 menit
+setInterval(syncFromSheets, 2 * 60 * 1000);
 
 // =====================
 // GOOGLE SHEETS SYNC
@@ -760,12 +762,12 @@ async function syncFromSheets() {
       }
     }
 
-    // Pull data beras
+    // Pull data beras — Sheets adalah master, selalu replace localStorage
     try {
       const resBeras = await fetch(GS_URL + '?type=beras');
       const jsonBeras = await resBeras.json();
-      if (jsonBeras.status === 'ok' && jsonBeras.data && jsonBeras.data.length > 0) {
-        beras_data = jsonBeras.data.map((d, i) => ({
+      if (jsonBeras.status === 'ok') {
+        beras_data = (jsonBeras.data||[]).map((d, i) => ({
           id: d.id || (Date.now() + i), invno: d.invno, tgl: d.tgl, nama: d.nama,
           kg: parseFloat(d.kg)||0, paket: parseInt(d.paket)||0, ket: d.ket||''
         }));
@@ -773,26 +775,32 @@ async function syncFromSheets() {
       }
     } catch(e) {}
 
-    // Pull data kantong
+    // Pull data kantong — Sheets adalah master, selalu replace localStorage
     try {
       const resKantong = await fetch(GS_URL + '?type=kantong');
       const jsonKantong = await resKantong.json();
-      if (jsonKantong.status === 'ok' && jsonKantong.data) {
-        const k = jsonKantong.data;
-        if ((k.k1||[]).length + (k.k2||[]).length + (k.k3||[]).length > 0) {
-          const mapK = (arr, i0) => (arr||[]).map((d,i) => ({
-            id: d.id || (Date.now() + i0 + i),
-            tgl: d.tgl, ket: d.ket,
-            qty: parseFloat(d.qty)||0, harga: parseFloat(d.harga)||0, jml: parseFloat(d.jml)||0
-          }));
-          kantong_data = { k1: mapK(k.k1, 0), k2: mapK(k.k2, 100), k3: mapK(k.k3, 200) };
-          localStorage.setItem('zis_kantong', JSON.stringify(kantong_data));
-        }
+      if (jsonKantong.status === 'ok') {
+        const k = jsonKantong.data || {k1:[],k2:[],k3:[]};
+        const mapK = (arr, i0) => (arr||[]).map((d,i) => ({
+          id: d.id || (Date.now() + i0 + i),
+          tgl: d.tgl, ket: d.ket,
+          qty: parseFloat(d.qty)||0, harga: parseFloat(d.harga)||0, jml: parseFloat(d.jml)||0
+        }));
+        kantong_data = { k1: mapK(k.k1, 0), k2: mapK(k.k2, 100), k3: mapK(k.k3, 200) };
+        localStorage.setItem('zis_kantong', JSON.stringify(kantong_data));
       }
     } catch(e) {}
 
     updateHistoryCount();
     document.getElementById('dt_issue').value = todayLocal();
+    // Re-render tab yang aktif
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+      const tabName = activeTab.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
+      if (tabName === 'report') renderKeluar();
+      if (tabName === 'export') renderSummary();
+      if (tabName === 'history') renderHistory();
+    }
     showSyncStatus('✅ Data tersinkronisasi (' + parsed.length + ' data)', '#2d6a4f');
   } catch(err) {
     showSyncStatus('⚠️ Gagal sync — pakai data lokal', '#c9a84c');
@@ -903,7 +911,7 @@ function switchTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'history') renderHistory();
   if (tab === 'export') renderSummary();
-  if (tab === 'report') { renderKeluar(); switchReport('uang'); }
+  if (tab === 'report') { syncFromSheets(); switchReport('uang'); }
   if (tab === 'form') document.getElementById('dt_issue').value = todayLocal();
 }
 
