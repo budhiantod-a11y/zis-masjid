@@ -1168,7 +1168,7 @@ function downloadPDF() {
 
   const ttd = localStorage.getItem('zis_ttd');
   // TTD+Cap di area "Yang Menerima" (kanan)
-  if (ttd) addImgWithWhiteBg(ttd, W - margin - 34, y - 16, 34, 16);
+  if (ttd) addImgWithWhiteBg(ttd, W - margin - 30, y - 18, 38, 18);
 
   doc.save(d.invno+'-'+d.nama_penyerah+' '+d.alamat_penyerah+'.pdf');
   showToast('📄 PDF didownload!');
