@@ -934,7 +934,10 @@ function parseSheetDate(val) {
     if (serial > 1000) {
       const epoch = new Date(1899, 11, 30);
       epoch.setDate(epoch.getDate() + serial);
-      return epoch.toISOString().split('T')[0];
+      const y = epoch.getFullYear();
+      const m = String(epoch.getMonth()+1).padStart(2,'0');
+      const day = String(epoch.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
     }
   }
 
@@ -959,9 +962,14 @@ function parseSheetDate(val) {
     else { [m, d, y] = parts; }                   // default US M/D/YYYY
     return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
-  // Fallback: native Date parse
+  // Fallback: native Date parse — pakai local date bukan UTC
   const dt = new Date(s);
-  if (!isNaN(dt)) return dt.toISOString().split('T')[0];
+  if (!isNaN(dt)) {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const day = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
   return s;
 }
 
