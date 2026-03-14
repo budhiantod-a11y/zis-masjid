@@ -568,9 +568,8 @@
       </div>
     </div>
 
-    <button class="btn btn-excel" onclick="exportKeluarXLSX()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Export Laporan Keuangan (.xlsx)
+    <button class="btn btn-primary" onclick="syncKeluarToSheets()" id="btn-sync-keluar">
+      🔄 Sync Laporan Keuangan ke Google Sheets
     </button>
   </div>
 
@@ -628,9 +627,8 @@
         <div style="font-weight:600;font-size:13px;">Belum ada entri beras</div>
       </div>
     </div>
-    <button class="btn btn-excel" onclick="exportBerasXLSX()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Export Laporan Beras (.xlsx)
+    <button class="btn btn-primary" onclick="syncBerasToSheets()" id="btn-sync-beras">
+      🔄 Sync Laporan Beras ke Google Sheets
     </button>
   </div>
 
@@ -1348,11 +1346,12 @@ function renderSummary() {
   const count = history_data.length;
   const last = history_data.length ? formatDate(history_data[0].dt_issue) : '-';
 
+  // Pakai _fitrah_total_ (dari Sheets) jika tersedia, fallback ke kalkulasi lokal
   const fitrahJiwa = history_data.reduce((s,d) => s+(d.fitrah_jiwa_uang||0)+(d.fitrah_jiwa_beras||0), 0);
-  const fitrahUang = history_data.reduce((s,d) => s+((d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0)), 0);
-  const fitrahBeras = history_data.reduce((s,d) => s+((d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)), 0);
-  const fidyahUang = history_data.reduce((s,d) => s+((d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
-  const fidyahBeras = history_data.reduce((s,d) => s+((d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0)), 0);
+  const fitrahUang = history_data.reduce((s,d) => s+(d._fitrah_total_uang || (d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0)), 0);
+  const fitrahBeras = history_data.reduce((s,d) => s+(d._fitrah_total_beras || (d.fitrah_jiwa_beras||0)*(d.fitrah_beras||0)), 0);
+  const fidyahUang = history_data.reduce((s,d) => s+(d._fidyah_total_uang || (d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+  const fidyahBeras = history_data.reduce((s,d) => s+(d._fidyah_total_beras || (d.fidyah_jiwa_beras||0)*(d.fidyah_beras||0)), 0);
   const maal = history_data.reduce((s,d) => s+(d.maal||0), 0);
   const infaq = history_data.reduce((s,d) => s+(d.infaq||0), 0);
   const shdqh = history_data.reduce((s,d) => s+(d.shdqh||0), 0);
@@ -1493,7 +1492,7 @@ function renderKeluar() {
   document.getElementById('r-saldo').style.color = saldo < 0 ? '#ff6b6b' : 'white';
 
   // Per-kantong masuk
-  const k1Masuk = history_data.reduce((s,d) => s+((d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+((d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+  const k1Masuk = history_data.reduce((s,d) => s+(d._fitrah_total_uang||(d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+(d._fidyah_total_uang||(d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
   const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
   const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
 
@@ -1569,8 +1568,8 @@ function renderBeras() {
   const usedInvnos = new Set(beras_data.map(d => d.invno));
   const belum = history_data.filter(d => (parseFloat(d.total_beras)||0) > 0 && !usedInvnos.has(d.invno));
   document.getElementById('r-belum-konversi').textContent = belum.length + ' transaksi';
-  document.getElementById('r-belum-list').textContent = belum.length
-    ? belum.map(d => `No.${d.invno} ${d.muzakki||d.nama_penyerah} (${parseFloat(d.total_beras).toFixed(1)} kg)`).join(' · ')
+  document.getElementById('r-belum-list').innerHTML = belum.length
+    ? belum.map(d => `• No.${d.invno} — ${d.nama_penyerah} (${parseFloat(d.total_beras).toFixed(1)} kg)`).join('<br>')
     : '✅ Semua sudah dikonversi';
 
   const list = document.getElementById('beras-list');
@@ -1600,82 +1599,51 @@ function renderBeras() {
   </table></div>`;
 }
 
-function exportKeluarXLSX() {
-  const totalMasuk = history_data.reduce((s,d) => s+(d.total_uang||0), 0);
-  const k1Masuk = history_data.reduce((s,d) => s+((d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+((d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
-  const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
-  const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
-  const allKeluar = [...kantong_data.k1, ...kantong_data.k2, ...kantong_data.k3];
-  const totalKeluar = allKeluar.reduce((s,d) => s+d.jml, 0);
-
-  const wb = XLSX.utils.book_new();
-
-  // Sheet 1: Ringkasan Global
-  const wsRingkasan = XLSX.utils.aoa_to_sheet([
-    ['LAPORAN PENGGUNAAN UANG ZIS - MASJID AL-MUTHMAINNAH 1447 H'],
-    [],
-    ['Kantong', 'Total Masuk (Rp)', 'Total Keluar (Rp)', 'Saldo (Rp)'],
-    ['Fitrah + Fidyah', k1Masuk, kantong_data.k1.reduce((s,d)=>s+d.jml,0), k1Masuk - kantong_data.k1.reduce((s,d)=>s+d.jml,0)],
-    ['Zakat Maal', k2Masuk, kantong_data.k2.reduce((s,d)=>s+d.jml,0), k2Masuk - kantong_data.k2.reduce((s,d)=>s+d.jml,0)],
-    ['Infaq + Shadaqah', k3Masuk, kantong_data.k3.reduce((s,d)=>s+d.jml,0), k3Masuk - kantong_data.k3.reduce((s,d)=>s+d.jml,0)],
-    [],
-    ['TOTAL', totalMasuk, totalKeluar, totalMasuk - totalKeluar],
-  ]);
-  wsRingkasan['!cols'] = [{wch:20},{wch:18},{wch:18},{wch:16}];
-  XLSX.utils.book_append_sheet(wb, wsRingkasan, 'Ringkasan');
-
-  // Helper: build sheet per kantong
-  function buildSheet(data, masuk, label) {
-    const rows = [
-      [label],
-      [],
-      ['Total Masuk', masuk],
-      [],
-      ['Tanggal', 'Item / Keterangan', 'Qty', 'Harga Satuan (Rp)', 'Total (Rp)', 'Saldo (Rp)'],
-    ];
-    let saldo = masuk;
-    data.forEach(d => {
-      saldo -= d.jml;
-      rows.push([d.tgl, d.ket, d.qty, d.harga, d.jml, saldo]);
-    });
-    rows.push([]);
-    rows.push(['', 'TOTAL KELUAR', '', '', data.reduce((s,d)=>s+d.jml,0), saldo]);
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{wch:14},{wch:35},{wch:8},{wch:18},{wch:16},{wch:16}];
-    return ws;
+async function syncKeluarToSheets() {
+  const btn = document.getElementById('btn-sync-keluar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Menyinkronkan...';
+  try {
+    const k1Masuk = history_data.reduce((s,d) => s+(d._fitrah_total_uang||(d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0))+(d._fidyah_total_uang||(d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+    const k2Masuk = history_data.reduce((s,d) => s+(d.maal||0), 0);
+    const k3Masuk = history_data.reduce((s,d) => s+(d.infaq||0)+(d.shdqh||0), 0);
+    const payload = {
+      action: 'sync_keluar',
+      kantong: kantong_data,
+      masuk: { k1: k1Masuk, k2: k2Masuk, k3: k3Masuk }
+    };
+    const res = await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    if (json.status === 'ok') {
+      showToast('✅ Laporan keuangan tersinkron ke Sheets!');
+    } else {
+      showToast('⚠️ Gagal sync: ' + (json.message||'unknown'));
+    }
+  } catch(e) {
+    showToast('❌ Gagal terhubung ke Sheets');
   }
-
-  XLSX.utils.book_append_sheet(wb, buildSheet(kantong_data.k1, k1Masuk, 'Fitrah + Fidyah'), 'Fitrah+Fidyah');
-  XLSX.utils.book_append_sheet(wb, buildSheet(kantong_data.k2, k2Masuk, 'Zakat Maal'), 'Zakat Maal');
-  XLSX.utils.book_append_sheet(wb, buildSheet(kantong_data.k3, k3Masuk, 'Infaq + Shadaqah'), 'Infaq+Shadaqah');
-
-  XLSX.writeFile(wb, 'Laporan_Keuangan_ZIS_1447H.xlsx');
-  showToast('📊 Laporan keuangan didownload!');
+  btn.disabled = false;
+  btn.textContent = '🔄 Sync Laporan Keuangan ke Google Sheets';
 }
 
-function exportBerasXLSX() {
-  const wb = XLSX.utils.book_new();
-  const wsData = [
-    ['LAPORAN KONVERSI BERAS ZIS - MASJID AL-MUTHMAINNAH 1447 H'],
-    [],
-    ['Tanggal', 'Beras (kg)', 'Jumlah Paket', 'Kg/Paket', 'Kumulatif Paket', 'Keterangan'],
-  ];
-  let kumPaket = 0;
-  beras_data.forEach(d => {
-    kumPaket += d.paket;
-    wsData.push([d.tgl, d.kg, d.paket, (d.kg/d.paket).toFixed(2), kumPaket, d.ket||'']);
-  });
-  wsData.push([]);
-  wsData.push(['TOTAL',
-    beras_data.reduce((s,d)=>s+d.kg,0),
-    beras_data.reduce((s,d)=>s+d.paket,0),
-    '', kumPaket, ''
-  ]);
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!cols'] = [{wch:14},{wch:12},{wch:14},{wch:12},{wch:16},{wch:30}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Konversi Beras');
-  XLSX.writeFile(wb, 'Laporan_Beras_ZIS_1447H.xlsx');
-  showToast('📊 Laporan beras didownload!');
+async function syncBerasToSheets() {
+  const btn = document.getElementById('btn-sync-beras');
+  btn.disabled = true;
+  btn.textContent = '⏳ Menyinkronkan...';
+  try {
+    const payload = { action: 'sync_beras', beras: beras_data };
+    const res = await fetch(GS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    if (json.status === 'ok') {
+      showToast('✅ Laporan beras tersinkron ke Sheets!');
+    } else {
+      showToast('⚠️ Gagal sync: ' + (json.message||'unknown'));
+    }
+  } catch(e) {
+    showToast('❌ Gagal terhubung ke Sheets');
+  }
+  btn.disabled = false;
+  btn.textContent = '🔄 Sync Laporan Beras ke Google Sheets';
 }
 
 function showToast(msg) {
