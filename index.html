@@ -165,6 +165,7 @@
   <div class="tab" onclick="switchTab('history')"><span class="tab-icon">📜</span>Riwayat<span class="badge" id="history-count">0</span></div>
   <div class="tab" onclick="switchTab('export')"><span class="tab-icon">📊</span>Export</div>
   <div class="tab" onclick="switchTab('report')"><span class="tab-icon">📈</span>Report</div>
+  <div class="tab" onclick="switchTab('rekap')"><span class="tab-icon">🗒️</span>Rekap</div>
   <div class="tab" onclick="switchTab('doa')"><span class="tab-icon">🤲</span>Doa</div>
 </div>
 
@@ -641,6 +642,45 @@
 
   <!-- ===== REPORT: PER JENIS ZAKAT ===== -->
 </div>
+
+<div id="tab-rekap" class="tab-content">
+
+  <!-- Input Tahun Lalu -->
+  <div class="card">
+    <div class="card-title">📅 Data Tahun Lalu (Pembanding)</div>
+    <p style="font-size:12px;color:var(--text-soft);margin-bottom:12px;">Input sekali, tersimpan otomatis. Digunakan untuk hitung % naik/turun.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-row"><label>Muzakki (jiwa)</label><input type="number" id="rl-muzakki" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Total Beras (kg)</label><input type="number" id="rl-beras" placeholder="0" min="0" step="0.1"></div>
+      <div class="form-row"><label>Zakat Fitrah (Rp)</label><input type="number" id="rl-fitrah" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Fidyah (Rp)</label><input type="number" id="rl-fidyah" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Zakat Maal (Rp)</label><input type="number" id="rl-maal" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Infaq (Rp)</label><input type="number" id="rl-infaq" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Sedekah (Rp)</label><input type="number" id="rl-shdqh" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Total Uang (Rp)</label><input type="number" id="rl-total-uang" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Dist. Beras (pack)</label><input type="number" id="rl-dist-beras-pack" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Dist. Beras (kg)</label><input type="number" id="rl-dist-beras-kg" placeholder="0" min="0" step="0.1"></div>
+      <div class="form-row"><label>Dist. Uang (amplop)</label><input type="number" id="rl-dist-uang-amplop" placeholder="0" min="0"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:4px;" onclick="saveRekapLalu()">💾 Simpan Data Tahun Lalu</button>
+  </div>
+
+  <!-- Input Distribusi Tahun Ini -->
+  <div class="card">
+    <div class="card-title">📦 Distribusi Tahun Ini</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="form-row"><label>Dist. Beras (pack)</label><input type="number" id="rt-dist-beras-pack" placeholder="0" min="0"></div>
+      <div class="form-row"><label>Dist. Beras (kg)</label><input type="number" id="rt-dist-beras-kg" placeholder="0" min="0" step="0.1"></div>
+      <div class="form-row"><label>Dist. Uang (amplop)</label><input type="number" id="rt-dist-uang-amplop" placeholder="0" min="0"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:4px;" onclick="saveRekapIni(); renderRekap();">💾 Simpan & Update Rekap</button>
+  </div>
+
+  <!-- Rekap Display -->
+  <div id="rekap-display"></div>
+
+</div>
+
 <div id="tab-doa" class="tab-content">
 
   <div class="card">
@@ -912,13 +952,14 @@ async function deleteFromSheets(invno) {
 // =====================
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['form','preview','history','export','report','doa'][i] === tab);
+    t.classList.toggle('active', ['form','preview','history','export','report','rekap','doa'][i] === tab);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'history') renderHistory();
   if (tab === 'export') renderSummary();
   if (tab === 'report') { syncFromSheets(); switchReport('uang'); }
+  if (tab === 'rekap') renderRekap();
   if (tab === 'form') document.getElementById('dt_issue').value = todayLocal();
 }
 
@@ -1706,8 +1747,156 @@ function showToast(msg) {
   setTimeout(()=>t.classList.remove('show'), 2500);
 }
 
-calcTotal();
-document.getElementById('k-tanggal').value = todayLocal();
+
+// =====================
+// REKAP
+// =====================
+let rekap_lalu = JSON.parse(localStorage.getItem('zis_rekap_lalu') || '{}');
+let rekap_ini  = JSON.parse(localStorage.getItem('zis_rekap_ini')  || '{}');
+
+function saveRekapLalu() {
+  rekap_lalu = {
+    muzakki:         parseFloat(document.getElementById('rl-muzakki').value)||0,
+    beras:           parseFloat(document.getElementById('rl-beras').value)||0,
+    fitrah:          parseFloat(document.getElementById('rl-fitrah').value)||0,
+    fidyah:          parseFloat(document.getElementById('rl-fidyah').value)||0,
+    maal:            parseFloat(document.getElementById('rl-maal').value)||0,
+    infaq:           parseFloat(document.getElementById('rl-infaq').value)||0,
+    shdqh:           parseFloat(document.getElementById('rl-shdqh').value)||0,
+    total_uang:      parseFloat(document.getElementById('rl-total-uang').value)||0,
+    dist_beras_pack: parseFloat(document.getElementById('rl-dist-beras-pack').value)||0,
+    dist_beras_kg:   parseFloat(document.getElementById('rl-dist-beras-kg').value)||0,
+    dist_uang_amp:   parseFloat(document.getElementById('rl-dist-uang-amplop').value)||0,
+  };
+  localStorage.setItem('zis_rekap_lalu', JSON.stringify(rekap_lalu));
+  showToast('✅ Data tahun lalu tersimpan');
+  renderRekap();
+}
+
+function saveRekapIni() {
+  rekap_ini = {
+    dist_beras_pack: parseFloat(document.getElementById('rt-dist-beras-pack').value)||0,
+    dist_beras_kg:   parseFloat(document.getElementById('rt-dist-beras-kg').value)||0,
+    dist_uang_amp:   parseFloat(document.getElementById('rt-dist-uang-amplop').value)||0,
+  };
+  localStorage.setItem('zis_rekap_ini', JSON.stringify(rekap_ini));
+  showToast('✅ Data distribusi tersimpan');
+}
+
+function pct(now, last) {
+  if (!last) return null;
+  return Math.round(((now - last) / last) * 100);
+}
+
+function pctBadge(now, last) {
+  const p = pct(now, last);
+  if (p === null) return '';
+  const color = p >= 0 ? '#27ae60' : '#e74c3c';
+  const arrow = p >= 0 ? '▲' : '▼';
+  return `<span style="color:${color};font-weight:700;font-size:12px;margin-left:6px;">${arrow} ${Math.abs(p)}%</span>`;
+}
+
+function rekapRow(label, val, valLast, unit='', rp=false) {
+  const disp = rp ? formatRp(val) : (val ? val.toLocaleString('id-ID') + (unit ? ' '+unit : '') : '- ' + unit);
+  const badge = pctBadge(val, valLast);
+  return `<tr>
+    <td style="padding:6px 8px;font-size:13px;color:var(--text-soft);">${label}</td>
+    <td style="padding:6px 8px;font-size:13px;">:</td>
+    <td style="padding:6px 8px;font-size:13px;font-weight:600;">${disp}${badge}</td>
+  </tr>`;
+}
+
+function initRekapInputs() {
+  if (!rekap_lalu.muzakki) return;
+  document.getElementById('rl-muzakki').value = rekap_lalu.muzakki||'';
+  document.getElementById('rl-beras').value = rekap_lalu.beras||'';
+  document.getElementById('rl-fitrah').value = rekap_lalu.fitrah||'';
+  document.getElementById('rl-fidyah').value = rekap_lalu.fidyah||'';
+  document.getElementById('rl-maal').value = rekap_lalu.maal||'';
+  document.getElementById('rl-infaq').value = rekap_lalu.infaq||'';
+  document.getElementById('rl-shdqh').value = rekap_lalu.shdqh||'';
+  document.getElementById('rl-total-uang').value = rekap_lalu.total_uang||'';
+  document.getElementById('rl-dist-beras-pack').value = rekap_lalu.dist_beras_pack||'';
+  document.getElementById('rl-dist-beras-kg').value = rekap_lalu.dist_beras_kg||'';
+  document.getElementById('rl-dist-uang-amplop').value = rekap_lalu.dist_uang_amp||'';
+  document.getElementById('rt-dist-beras-pack').value = rekap_ini.dist_beras_pack||'';
+  document.getElementById('rt-dist-beras-kg').value = rekap_ini.dist_beras_kg||'';
+  document.getElementById('rt-dist-uang-amplop').value = rekap_ini.dist_uang_amp||'';
+}
+
+function renderRekap() {
+  initRekapInputs();
+
+  const muzakki = history_data.length;
+  const totalBeras = history_data.reduce((s,d) => s+(d.total_beras||0), 0);
+  const fitrahUang = history_data.reduce((s,d) => s+(d._fitrah_total_uang||(d.fitrah_jiwa_uang||0)*(d.fitrah_uang||0)), 0);
+  const fidyahUang = history_data.reduce((s,d) => s+(d._fidyah_total_uang||(d.fidyah_jiwa_uang||0)*(d.fidyah_uang||0)), 0);
+  const maal = history_data.reduce((s,d) => s+(d.maal||0), 0);
+  const infaq = history_data.reduce((s,d) => s+(d.infaq||0), 0);
+  const shdqh = history_data.reduce((s,d) => s+(d.shdqh||0), 0);
+  const totalUang = history_data.reduce((s,d) => s+(d.total_uang||0), 0);
+  const L = rekap_lalu;
+  const I = rekap_ini;
+
+  function card(label, val, valLast, unit, sub='', subVal=null, subLast=null, subUnit='') {
+    const p = pct(val, valLast);
+    const pColor = p === null ? '' : (p >= 0 ? 'color:var(--green-mid)' : 'color:#e74c3c');
+    const pText = p === null ? '' : `<div style="font-size:12px;${pColor};margin-top:4px;">${p>=0?'▲':'▼'} ${Math.abs(p)}% vs tahun lalu</div>`;
+    const subHtml = sub ? `
+      <div style="border-top:1px solid var(--green-pale);padding-top:8px;margin-top:10px;">
+        <div style="font-size:11px;color:var(--text-soft);">${sub}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--green-dark);margin-top:2px;">${subUnit === 'kg' ? subVal.toFixed(1)+' kg' : formatRp(subVal)}${subVal && subLast ? pctBadge(subVal,subLast) : ''}</div>
+      </div>` : '';
+    return `<div style="background:var(--white);border:1px solid rgba(212,201,168,0.3);border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(26,58,42,0.06);">
+      <div style="font-size:11px;color:var(--text-soft);margin-bottom:4px;">${label}</div>
+      <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${typeof val === 'number' && unit !== 'rp' ? val.toLocaleString('id-ID') : formatRp(val)} <span style="font-size:13px;font-weight:400;color:var(--text-soft);">${unit !== 'rp' ? unit : ''}</span></div>
+      ${pText}${subHtml}
+    </div>`;
+  }
+
+  const html = `
+  <div style="margin-bottom:8px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span style="width:3px;height:14px;background:var(--gold);border-radius:2px;display:inline-block;"></span>Pemasukan</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      ${card('Muzakki', muzakki, L.muzakki, 'jiwa')}
+      ${card('Total beras masuk', totalBeras, L.beras, 'kg', '', null, null, 'kg').replace('toLocaleString', 'toFixed(1)')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      ${card('Zakat fitrah', fitrahUang, L.fitrah, 'rp')}
+      ${card('Fidyah', fidyahUang, L.fidyah, 'rp')}
+      ${card('Zakat maal', maal, L.maal, 'rp')}
+      ${card('Infaq', infaq, L.infaq, 'rp')}
+      ${card('Sedekah', shdqh, L.shdqh, 'rp')}
+    </div>
+    <div style="background:var(--green-pale);border-radius:14px;padding:14px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:13px;font-weight:700;color:var(--green-dark);">Total uang</div>
+      <div style="font-size:18px;font-weight:700;color:var(--green-dark);">${formatRp(totalUang)}${pctBadge(totalUang, L.total_uang)}</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green-mid);margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span style="width:3px;height:14px;background:var(--gold);border-radius:2px;display:inline-block;"></span>Distribusi</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:var(--white);border:1px solid rgba(212,201,168,0.3);border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(26,58,42,0.06);">
+        <div style="font-size:11px;color:var(--text-soft);margin-bottom:4px;">Paket beras</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${(I.dist_beras_pack||0).toLocaleString('id-ID')} <span style="font-size:13px;font-weight:400;color:var(--text-soft);">paket</span></div>
+        ${I.dist_beras_pack ? `<div style="font-size:12px;${pct(I.dist_beras_pack,L.dist_beras_pack)>=0?'color:var(--green-mid)':'color:#e74c3c'};margin-top:4px;">${pct(I.dist_beras_pack,L.dist_beras_pack)>=0?'▲':'▼'} ${Math.abs(pct(I.dist_beras_pack,L.dist_beras_pack))}% vs tahun lalu</div>` : ''}
+        <div style="border-top:1px solid var(--green-pale);padding-top:8px;margin-top:10px;">
+          <div style="font-size:11px;color:var(--text-soft);">Total beras terdistribusi</div>
+          <div style="font-size:14px;font-weight:600;color:var(--green-dark);margin-top:2px;">${(I.dist_beras_kg||0).toFixed(1)} kg ${I.dist_beras_kg && L.dist_beras_kg ? pctBadge(I.dist_beras_kg, L.dist_beras_kg) : ''}</div>
+        </div>
+      </div>
+      <div style="background:var(--white);border:1px solid rgba(212,201,168,0.3);border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(26,58,42,0.06);">
+        <div style="font-size:11px;color:var(--text-soft);margin-bottom:4px;">Amplop uang</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark);">${(I.dist_uang_amp||0).toLocaleString('id-ID')} <span style="font-size:13px;font-weight:400;color:var(--text-soft);">amplop</span></div>
+        ${I.dist_uang_amp ? `<div style="font-size:12px;${pct(I.dist_uang_amp,L.dist_uang_amp)>=0?'color:var(--green-mid)':'color:#e74c3c'};margin-top:4px;">${pct(I.dist_uang_amp,L.dist_uang_amp)>=0?'▲':'▼'} ${Math.abs(pct(I.dist_uang_amp,L.dist_uang_amp))}% vs tahun lalu</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('rekap-display').innerHTML = html;
+}
+
 
 function setImgPreview(type, b64) {
   const img = document.getElementById('img-ttd');
@@ -1739,6 +1928,8 @@ function initImages() {
   if (b64) setImgPreview('ttd', b64);
 }
 initImages();
+calcTotal();
+document.getElementById('k-tanggal').value = todayLocal();
 </script>
 </body>
 </html>
