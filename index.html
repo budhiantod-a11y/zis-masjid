@@ -1264,10 +1264,10 @@ function generatePreview() {
   document.getElementById('r-total-beras').textContent = d.total_beras.toFixed(1) + ' kg';
 
   let rows = '';
-  if (d.fitrah_jiwa_uang>0) rows += `<tr><td>Zakat Fitrah</td><td>Uang</td><td style="text-align:right">${d.fitrah_jiwa_uang}</td><td style="text-align:right">${formatRp(d.fitrah_jiwa_uang*d.fitrah_uang)}</td></tr>`;
-  if (d.fitrah_jiwa_beras>0) rows += `<tr><td>Zakat Fitrah</td><td>Beras</td><td style="text-align:right">${d.fitrah_jiwa_beras}</td><td style="text-align:right">${(d.fitrah_jiwa_beras*d.fitrah_beras).toFixed(1)} kg</td></tr>`;
-  if (d.fidyah_jiwa_uang>0) rows += `<tr><td>Fidyah</td><td>Uang</td><td style="text-align:right">${d.fidyah_jiwa_uang}</td><td style="text-align:right">${formatRp(d.fidyah_jiwa_uang*d.fidyah_uang)}</td></tr>`;
-  if (d.fidyah_jiwa_beras>0) rows += `<tr><td>Fidyah</td><td>Beras</td><td style="text-align:right">${d.fidyah_jiwa_beras}</td><td style="text-align:right">${(d.fidyah_jiwa_beras*d.fidyah_beras).toFixed(1)} kg</td></tr>`;
+  if (d._fitrah_jiwa>0 && d._fitrah_total_uang>0) rows += `<tr><td>Zakat Fitrah</td><td>Uang</td><td style="text-align:right">${d._fitrah_jiwa}</td><td style="text-align:right">${formatRp(d._fitrah_total_uang)}</td></tr>`;
+  if (d._fitrah_jiwa>0 && d._fitrah_total_beras>0) rows += `<tr><td>Zakat Fitrah</td><td>Beras</td><td style="text-align:right">${d._fitrah_jiwa}</td><td style="text-align:right">${(d._fitrah_total_beras).toFixed(1)} kg</td></tr>`;
+  if (d._fidyah_jiwa>0 && d._fidyah_total_uang>0) rows += `<tr><td>Fidyah</td><td>Uang</td><td style="text-align:right">${d._fidyah_jiwa}</td><td style="text-align:right">${formatRp(d._fidyah_total_uang)}</td></tr>`;
+  if (d._fidyah_jiwa>0 && d._fidyah_total_beras>0) rows += `<tr><td>Fidyah</td><td>Beras</td><td style="text-align:right">${d._fidyah_jiwa}</td><td style="text-align:right">${(d._fidyah_total_beras).toFixed(1)} kg</td></tr>`;
   if (d.maal>0) rows += `<tr><td>Zakat Maal</td><td>Uang</td><td style="text-align:right">-</td><td style="text-align:right">${formatRp(d.maal)}</td></tr>`;
   if (d.infaq>0) rows += `<tr><td>Infaq</td><td>Uang</td><td style="text-align:right">-</td><td style="text-align:right">${formatRp(d.infaq)}</td></tr>`;
   if (d.shdqh>0) rows += `<tr><td>Shadaqah</td><td>Uang</td><td style="text-align:right">-</td><td style="text-align:right">${formatRp(d.shdqh)}</td></tr>`;
@@ -1315,10 +1315,10 @@ function downloadPDF() {
   doc.text('Jiwa',90,y,{align:'right'}); doc.text('Total',W-margin,y,{align:'right'});
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(50,50,50); y+=7;
   const rows=[];
-  if(d.fitrah_jiwa_uang>0) rows.push(['Zakat Fitrah','Uang',d.fitrah_jiwa_uang,formatRp(d.fitrah_jiwa_uang*d.fitrah_uang)]);
-  if(d.fitrah_jiwa_beras>0) rows.push(['Zakat Fitrah','Beras',d.fitrah_jiwa_beras,(d.fitrah_jiwa_beras*d.fitrah_beras).toFixed(1)+' kg']);
-  if(d.fidyah_jiwa_uang>0) rows.push(['Fidyah','Uang',d.fidyah_jiwa_uang,formatRp(d.fidyah_jiwa_uang*d.fidyah_uang)]);
-  if(d.fidyah_jiwa_beras>0) rows.push(['Fidyah','Beras',d.fidyah_jiwa_beras,(d.fidyah_jiwa_beras*d.fidyah_beras).toFixed(1)+' kg']);
+  if(d._fitrah_jiwa>0 && d._fitrah_total_uang>0) rows.push(['Zakat Fitrah','Uang',d._fitrah_jiwa,formatRp(d._fitrah_total_uang)]);
+  if(d._fitrah_jiwa>0 && d._fitrah_total_beras>0) rows.push(['Zakat Fitrah','Beras',d._fitrah_jiwa,(d._fitrah_total_beras).toFixed(1)+' kg']);
+  if(d._fidyah_jiwa>0 && d._fidyah_total_uang>0) rows.push(['Fidyah','Uang',d._fidyah_jiwa,formatRp(d._fidyah_total_uang)]);
+  if(d._fidyah_jiwa>0 && d._fidyah_total_beras>0) rows.push(['Fidyah','Beras',d._fidyah_jiwa,(d._fidyah_total_beras).toFixed(1)+' kg']);
   if(d.maal>0) rows.push(['Zakat Maal','Uang','-',formatRp(d.maal)]);
   if(d.infaq>0) rows.push(['Infaq','Uang','-',formatRp(d.infaq)]);
   if(d.shdqh>0) rows.push(['Shadaqah','Uang','-',formatRp(d.shdqh)]);
@@ -1984,7 +1984,7 @@ function initRekapInputs() {
   document.getElementById('rt-dist-uang-amplop').value = rekap_ini.dist_uang_amp||'';
 }
 
-function renderRekap() {
+function renderRekap(displayOnly) {
   initRekapInputs();
 
   const muzakki = history_data.reduce((s,d) => s+(d._fitrah_jiwa||0), 0);
@@ -2102,8 +2102,14 @@ function renderRekap() {
   </div>`;
 
   document.getElementById('rekap-display').innerHTML = html;
-  renderKategoriList();
-  renderAssignList();
+  if (!displayOnly) {
+    renderKategoriList();
+    renderAssignList();
+  }
+}
+
+function renderRekapDisplay() {
+  renderRekap(true);
 }
 
 // =====================
@@ -2154,7 +2160,7 @@ function assignKategori(trxKey, katId) {
   if (katId === '') delete kat_assign[trxKey];
   else kat_assign[trxKey] = parseInt(katId);
   saveKategori();
-  renderRekap();
+  renderRekapDisplay(); // hanya update display, tidak re-render form
 }
 
 function renderAssignList() {
