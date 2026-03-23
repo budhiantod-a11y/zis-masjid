@@ -2132,18 +2132,36 @@ function addKategori() {
   saveKategori();
   document.getElementById('kat-nama').value = '';
   renderKategoriList();
-  renderAssignList();
-  renderRekap();
+  // Kalau assign list sudah ada, update options saja — jangan re-render
+  if (document.querySelectorAll('[data-assign-key]').length > 0) {
+    updateAssignOptions();
+  } else {
+    renderAssignList();
+  }
+  renderRekapDisplay();
 }
 
 function deleteKategori(id) {
   kat_data = kat_data.filter(k => k.id !== id);
-  // hapus assign yang pakai kategori ini
+  // hapus assign yang pakai kategori ini dari memory dan localStorage
   Object.keys(kat_assign).forEach(k => { if (kat_assign[k] === id) delete kat_assign[k]; });
   saveKategori();
   renderKategoriList();
-  renderAssignList();
-  renderRekap();
+  // Update dropdown options tanpa re-render seluruh assign list
+  updateAssignOptions();
+  renderRekapDisplay();
+}
+
+function updateAssignOptions() {
+  // Rebuild options di semua dropdown yang sudah ada tanpa reset value
+  const opts = '<option value="">— belum</option>' + kat_data.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
+  document.querySelectorAll('[data-assign-key]').forEach(sel => {
+    const currentVal = sel.value;
+    sel.innerHTML = opts;
+    // Restore value jika masih valid
+    const stillExists = kat_data.find(k => k.id === parseInt(currentVal));
+    sel.value = stillExists ? currentVal : '';
+  });
 }
 
 function renderKategoriList() {
