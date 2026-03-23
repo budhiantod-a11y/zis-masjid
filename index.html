@@ -2037,9 +2037,9 @@ function renderRekap(displayOnly) {
 
   // Build pengeluaran rows per kategori
   const katRows = Object.values(katGroups).filter(g => g.count > 0).map(g =>
-    `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--green-pale);font-size:13px;">
-      <span style="color:var(--text-soft);">${g.nama} <span style="font-size:11px;color:var(--text-soft);">(${g.count}x)</span></span>
-      <span>${formatRp(Math.round(g.total))}</span>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--green-pale);font-size:13px;gap:8px;">
+      <span style="color:var(--text-soft);flex:1;">${g.nama}</span>
+      <span style="white-space:nowrap;flex-shrink:0;">${formatRp(Math.round(g.total))}</span>
     </div>`
   ).join('');
   const belumRow = belumKat.count > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;">
