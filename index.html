@@ -718,8 +718,9 @@
   <!-- Assign Kategori -->
   <div class="card" id="card-assign" style="display:none;">
     <div class="card-title">📋 Assign Kategori Transaksi</div>
-    <p style="font-size:12px;color:var(--text-soft);margin-bottom:10px;">Pilih kategori untuk setiap transaksi pengeluaran.</p>
+    <p style="font-size:12px;color:var(--text-soft);margin-bottom:10px;">Pilih kategori untuk setiap transaksi. Bisa parsial — simpan kapan saja.</p>
     <div id="assign-list"></div>
+    <button class="btn btn-primary" style="margin-top:10px;" onclick="simpanAssign()">💾 Simpan Assignment</button>
   </div>
 
   <!-- Rekap Display -->
@@ -2157,10 +2158,22 @@ function renderKategoriList() {
 }
 
 function assignKategori(trxKey, katId) {
+  // Hanya update memory, tidak save — user klik Simpan untuk persist
   if (katId === '') delete kat_assign[trxKey];
   else kat_assign[trxKey] = parseInt(katId);
+}
+
+function simpanAssign() {
+  // Baca semua dropdown yang ada sekarang
+  document.querySelectorAll('[data-assign-key]').forEach(sel => {
+    const key = sel.getAttribute('data-assign-key');
+    const val = sel.value;
+    if (val === '') delete kat_assign[key];
+    else kat_assign[key] = parseInt(val);
+  });
   saveKategori();
-  renderRekapDisplay(); // hanya update display, tidak re-render form
+  renderRekapDisplay();
+  showToast('✅ Assignment tersimpan');
 }
 
 function renderAssignList() {
@@ -2183,7 +2196,7 @@ function renderAssignList() {
         <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.ket}</div>
         <div style="font-size:11px;color:var(--text-soft);">${formatRp(d.jml)}</div>
       </div>
-      <select style="font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--green-light);background:white;max-width:130px;" onchange="assignKategori('${key}', this.value)">
+      <select data-assign-key="${key}" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--green-light);background:white;max-width:130px;" onchange="assignKategori('${key}', this.value)">
         <option value="" ${!assigned?'selected':''}>— belum</option>
         ${opts.replace(`value="${assigned}"`, `value="${assigned}" selected`)}
       </select>
