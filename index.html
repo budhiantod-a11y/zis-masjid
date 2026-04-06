@@ -701,7 +701,7 @@
       <div class="form-row"><label>Dist. Beras (kg)</label><input type="number" id="rt-dist-beras-kg" placeholder="0" min="0" step="0.1"></div>
       <div class="form-row"><label>Dist. Uang (amplop)</label><input type="number" id="rt-dist-uang-amplop" placeholder="0" min="0"></div>
     </div>
-    <button class="btn btn-primary" style="margin-top:4px;" onclick="saveRekapIni(); renderRekap();">💾 Simpan & Update Rekap</button>
+    <button class="btn btn-primary" style="margin-top:4px;" onclick="saveRekapIni(); renderRekap(true);">💾 Simpan & Update Rekap</button>
   </div>
 
   <!-- Kategori Pengeluaran -->
@@ -1931,7 +1931,7 @@ function saveRekapLalu() {
   };
   localStorage.setItem('zis_rekap_lalu', JSON.stringify(rekap_lalu));
   showToast('✅ Data tahun lalu tersimpan');
-  renderRekap();
+  renderRekap(true); // display only — jangan reset assign list
 }
 
 function saveRekapIni() {
@@ -2132,12 +2132,14 @@ function addKategori() {
   saveKategori();
   document.getElementById('kat-nama').value = '';
   renderKategoriList();
-  // Kalau assign list sudah ada, update options saja — jangan re-render
+  // Kalau assign rows sudah ada di DOM, cukup update options-nya saja
+  // (supaya user tidak kehilangan pilihan yang belum di-save)
   if (document.querySelectorAll('[data-assign-key]').length > 0) {
     updateAssignOptions();
   } else {
-    renderAssignList();
+    renderAssignList(); // akan render kalau allTrx ada
   }
+  showToast('✅ Kategori "' + nama + '" ditambahkan');
   renderRekapDisplay();
 }
 
@@ -2176,13 +2178,15 @@ function renderKategoriList() {
 }
 
 function assignKategori(trxKey, katId) {
-  // Hanya update memory, tidak save — user klik Simpan untuk persist
+  // Auto-save langsung ke localStorage setiap kali pilih kategori
   if (katId === '') delete kat_assign[trxKey];
   else kat_assign[trxKey] = parseInt(katId);
+  saveKategori();      // simpan setiap perubahan supaya tidak ilang kena re-render
+  renderRekapDisplay(); // update rekap langsung
 }
 
 function simpanAssign() {
-  // Baca semua dropdown yang ada sekarang
+  // Baca semua dropdown yang ada (fallback / konfirmasi manual)
   document.querySelectorAll('[data-assign-key]').forEach(sel => {
     const key = sel.getAttribute('data-assign-key');
     const val = sel.value;
@@ -2205,18 +2209,19 @@ function renderAssignList() {
   ];
   if (!allTrx.length || !kat_data.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-  const opts = kat_data.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
+  // Bangun options per-row dengan selected yang benar (bukan string replace yang fragile)
   el.innerHTML = allTrx.map(d => {
     const key = `${d.kantong}_${d.id}`;
-    const assigned = kat_assign[key] || '';
+    const assigned = String(kat_assign[key] || '');
+    const opts = '<option value="">— belum</option>' +
+      kat_data.map(k => `<option value="${k.id}"${String(k.id) === assigned ? ' selected' : ''}>${k.nama}</option>`).join('');
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--green-pale);">
       <div style="flex:1;min-width:0;">
         <div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-main);">${d.ket}</div>
         <div style="font-size:11px;color:var(--text-soft);">${formatRp(d.jml)}</div>
       </div>
       <select data-assign-key="${key}" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--green-light);background:white;max-width:120px;" onchange="assignKategori('${key}', this.value)">
-        <option value="" ${!assigned?'selected':''}>— belum</option>
-        ${opts.replace(`value="${assigned}"`, `value="${assigned}" selected`)}
+        ${opts}
       </select>
     </div>`;
   }).join('');
