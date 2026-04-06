@@ -2012,7 +2012,7 @@ function renderRekap(displayOnly) {
   kat_data.forEach(k => { katGroups[String(k.id)] = { nama: k.nama, total: 0, count: 0 }; });
   let belumKat = { total: 0, count: 0 };
   allTrx.forEach(d => {
-    const key = `${d.kantong}_${d.id}`;
+    const key = `${d.kantong}_${d.tgl}_${d.ket}`;
     const katId = String(kat_assign[key] || '');
     if (katId && katGroups[katId]) { katGroups[katId].total += (d.jml||0); katGroups[katId].count++; }
     else { belumKat.total += (d.jml||0); belumKat.count++; }
@@ -2119,6 +2119,19 @@ function renderRekapDisplay() {
 // =====================
 let kat_data = JSON.parse(localStorage.getItem('zis_kategori') || '[]');
 let kat_assign = JSON.parse(localStorage.getItem('zis_kat_assign') || '{}');
+// Deteksi assignment lama (key berbasis id numerik saja, bukan tgl_ket)
+// Jika ada, reset supaya tidak konflik dengan key format baru
+(function migrateKatAssign() {
+  const keys = Object.keys(kat_assign);
+  if (keys.length === 0) return;
+  // Key baru format: "k1_2026-03-01_Nama Item", key lama: "k1_1234567890123"
+  const hasOldFormat = keys.some(k => /^k[123]_\d{10,}$/.test(k));
+  if (hasOldFormat) {
+    kat_assign = {};
+    localStorage.setItem('zis_kat_assign', '{}');
+    console.log('kat_assign direset ke format key baru');
+  }
+})();
 
 function saveKategori() {
   localStorage.setItem('zis_kategori', JSON.stringify(kat_data));
@@ -2207,7 +2220,7 @@ function renderAssignList() {
   if (!allTrx.length || !kat_data.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
   el.innerHTML = allTrx.map(d => {
-    const key = `${d.kantong}_${d.id}`;
+    const key = `${d.kantong}_${d.tgl}_${d.ket}`;
     // Semua perbandingan pakai String supaya tidak ada type mismatch
     const assigned = String(kat_assign[key] || '');
     const opts = '<option value="">— belum</option>' +
